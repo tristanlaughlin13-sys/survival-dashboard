@@ -1,7 +1,7 @@
 // API Communication Layer
 const API_URL = window.location.hostname === 'localhost' 
   ? 'http://localhost:3000' 
-  : 'https://your-api.onrender.com'; // UPDATE THIS AFTER DEPLOYMENT
+  : 'https://survival-dashboard-api.onrender.com'; // Your Render backend
 
 class API {
   constructor() {
