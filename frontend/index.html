@@ -929,6 +929,198 @@
             background: #ff3333;
             color: #fff;
         }
+
+        /* ===== DEMO MODE STYLES ===== */
+        
+        .demo-banner {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 10000;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: white;
+            padding: 12px 20px;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translateY(-100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .demo-banner-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .demo-banner-icon {
+            font-size: 1.5em;
+        }
+
+        .demo-banner-text {
+            font-weight: 500;
+            font-size: 0.95em;
+        }
+
+        .demo-banner-btn {
+            background: white;
+            color: #6366f1;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9em;
+        }
+
+        .demo-banner-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(255, 255, 255, 0.3);
+        }
+
+        .demo-banner-dismiss {
+            background: transparent;
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 4px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9em;
+            margin-left: auto;
+        }
+
+        .demo-banner-dismiss:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Auth Buttons (Top Right) */
+        .auth-buttons {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .btn-auth {
+            padding: 8px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9em;
+            border: none;
+        }
+
+        .btn-login {
+            background: transparent;
+            color: #fff;
+            border: 2px solid #fff;
+        }
+
+        .btn-login:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .btn-register {
+            background: linear-gradient(135deg, #00ff88 0%, #00cc66 100%);
+            color: #000;
+        }
+
+        .btn-register:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 255, 136, 0.4);
+        }
+
+        /* Auth Modals */
+        .auth-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            z-index: 10001;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.2s ease-out;
+        }
+
+        .auth-modal.active {
+            display: flex;
+        }
+
+        .auth-modal-content {
+            background: #1a1a1a;
+            border: 2px solid #ff3333;
+            border-radius: 20px;
+            padding: 40px;
+            width: 90%;
+            max-width: 450px;
+            position: relative;
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(30px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .auth-modal-close {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            background: transparent;
+            border: none;
+            color: #999;
+            font-size: 1.5em;
+            cursor: pointer;
+            padding: 5px;
+            line-height: 1;
+        }
+
+        .auth-modal-close:hover {
+            color: #fff;
+        }
+
+        /* Responsive Demo Banner */
+        @media (max-width: 768px) {
+            .demo-banner-content {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .demo-banner-text {
+                font-size: 0.85em;
+                text-align: center;
+            }
+
+            .demo-banner-dismiss {
+                margin-left: 0;
+            }
+        }
     </style>
 </head>
 
@@ -1415,6 +1607,74 @@
         </div>
     </div>
 
+    <!-- Login Modal -->
+    <div class="auth-modal" id="loginModal">
+        <div class="auth-modal-content">
+            <button class="auth-modal-close" onclick="closeLoginModal()">×</button>
+            <h2 style="color: #ff3333; margin-bottom: 10px; text-align: center;">Login</h2>
+            <p style="text-align: center; color: #666; margin-bottom: 20px; font-size: 14px;">Access your dashboard</p>
+            
+            <div class="error-message" id="loginErrorMessage" style="display: none;"></div>
+            
+            <form onsubmit="handleLoginSubmit(event)">
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 8px; color: #999; font-size: 14px;">Email</label>
+                    <input type="email" id="modalLoginEmail" required placeholder="your@email.com" 
+                        style="width: 100%; padding: 12px; background: #2a2a2a; color: #fff; border: 2px solid #333; border-radius: 8px; font-size: 1em;">
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 8px; color: #999; font-size: 14px;">Password</label>
+                    <input type="password" id="modalLoginPassword" required placeholder="••••••••"
+                        style="width: 100%; padding: 12px; background: #2a2a2a; color: #fff; border: 2px solid #333; border-radius: 8px; font-size: 1em;">
+                </div>
+                <button type="submit" style="width: 100%; padding: 14px; background: linear-gradient(135deg, #00ff88 0%, #00cc66 100%); color: #000; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 1em;">
+                    Login
+                </button>
+            </form>
+            <p style="text-align: center; margin-top: 20px; color: #999; font-size: 14px;">
+                Don't have an account? 
+                <button onclick="switchToRegister()" style="background: none; border: none; color: #00ff88; cursor: pointer; text-decoration: underline;">Register</button>
+            </p>
+        </div>
+    </div>
+
+    <!-- Register Modal -->
+    <div class="auth-modal" id="registerModal">
+        <div class="auth-modal-content">
+            <button class="auth-modal-close" onclick="closeRegisterModal()">×</button>
+            <h2 style="color: #ff3333; margin-bottom: 10px; text-align: center;">Create Account</h2>
+            <p style="text-align: center; color: #666; margin-bottom: 20px; font-size: 14px;">Start tracking your progress</p>
+            
+            <div class="error-message" id="registerErrorMessage" style="display: none;"></div>
+            
+            <form onsubmit="handleRegisterSubmit(event)">
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 8px; color: #999; font-size: 14px;">Full Name</label>
+                    <input type="text" id="modalRegisterName" required placeholder="John Doe"
+                        style="width: 100%; padding: 12px; background: #2a2a2a; color: #fff; border: 2px solid #333; border-radius: 8px; font-size: 1em;">
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 8px; color: #999; font-size: 14px;">Email</label>
+                    <input type="email" id="modalRegisterEmail" required placeholder="your@email.com"
+                        style="width: 100%; padding: 12px; background: #2a2a2a; color: #fff; border: 2px solid #333; border-radius: 8px; font-size: 1em;">
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 8px; color: #999; font-size: 14px;">Password</label>
+                    <input type="password" id="modalRegisterPassword" required placeholder="••••••••" minlength="8"
+                        style="width: 100%; padding: 12px; background: #2a2a2a; color: #fff; border: 2px solid #333; border-radius: 8px; font-size: 1em;">
+                    <p style="font-size: 12px; color: #666; margin-top: 5px;">• At least 8 characters long</p>
+                </div>
+                <button type="submit" style="width: 100%; padding: 14px; background: linear-gradient(135deg, #00ff88 0%, #00cc66 100%); color: #000; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 1em;">
+                    Create Account
+                </button>
+            </form>
+            <p style="text-align: center; margin-top: 20px; color: #999; font-size: 14px;">
+                Already have an account? 
+                <button onclick="switchToLogin()" style="background: none; border: none; color: #00ff88; cursor: pointer; text-decoration: underline;">Login</button>
+            </p>
+        </div>
+    </div>
+
     <script src="js/api.js"></script>
     <script>
         // Global State
@@ -1427,22 +1687,255 @@
         let isTimerRunning = false;
         let sessions = [];
         let bills = [];
+        let isDemoMode = false;
+
+        // ===== DEMO MODE: Fake Data Generators =====
+        
+        function generateRandomSessions() {
+            const sessions = [];
+            const today = new Date();
+            const names = [
+                'Client Website', 
+                'App Development', 
+                'Consulting Call', 
+                'Bug Fixes', 
+                'Code Review',
+                'Feature Implementation',
+                'Database Migration',
+                'UI/UX Design',
+                'API Integration',
+                'Testing & QA'
+            ];
+            const rates = [45, 55, 65, 75, 85, 95];
+            
+            // Generate 15-25 sessions over last 14 days
+            const sessionCount = Math.floor(Math.random() * 11) + 15;
+            
+            for (let i = 0; i < sessionCount; i++) {
+                const daysAgo = Math.floor(Math.random() * 14);
+                const date = new Date(today.getTime() - daysAgo * 24 * 60 * 60 * 1000);
+                const hours = (Math.random() * 6 + 1).toFixed(2); // 1-7 hours
+                const rate = rates[Math.floor(Math.random() * rates.length)];
+                const earnings = (parseFloat(hours) * rate).toFixed(2);
+                
+                // Random time of day
+                date.setHours(Math.floor(Math.random() * 12) + 8); // 8am-8pm
+                date.setMinutes(Math.floor(Math.random() * 60));
+                
+                sessions.push({
+                    id: `demo-session-${i}`,
+                    time_display: date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
+                    timestamp: date.toISOString(),
+                    date: date.toISOString().split('T')[0],
+                    hours: parseFloat(hours),
+                    rate: parseFloat(rate),
+                    earnings: parseFloat(earnings),
+                    note: names[Math.floor(Math.random() * names.length)],
+                    is_leisure: false,
+                    opportunity_cost: 0,
+                    is_manual: true,
+                    created_at: date.toISOString(),
+                    updated_at: date.toISOString()
+                });
+            }
+            
+            return sessions.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+        }
+
+        function generateRandomBills() {
+            const billTypes = [
+                { name: 'Rent', cadRange: [1200, 2500], usdFactor: 0.7143 },
+                { name: 'Groceries', cadRange: [150, 400], usdFactor: 0.7143 },
+                { name: 'Utilities', cadRange: [80, 200], usdFactor: 0.7143 },
+                { name: 'Internet', cadRange: [60, 120], usdFactor: 0.7143 },
+                { name: 'Phone Bill', cadRange: [30, 80], usdFactor: 0.7143 },
+                { name: 'Credit Card', cadRange: [100, 800], usdFactor: 0.7143 },
+                { name: 'Insurance', cadRange: [150, 400], usdFactor: 0.7143 },
+                { name: 'Gas/Fuel', cadRange: [50, 150], usdFactor: 0.7143 },
+                { name: 'Subscription Services', cadRange: [15, 80], usdFactor: 0.7143 },
+                { name: 'Student Loan', cadRange: [200, 600], usdFactor: 0.7143 }
+            ];
+            
+            const bills = [];
+            const billCount = Math.floor(Math.random() * 6) + 7; // 7-12 bills
+            const usedTypes = new Set();
+            
+            for (let i = 0; i < billCount; i++) {
+                // Pick a unique bill type
+                let billType;
+                do {
+                    billType = billTypes[Math.floor(Math.random() * billTypes.length)];
+                } while (usedTypes.has(billType.name) && usedTypes.size < billTypes.length);
+                usedTypes.add(billType.name);
+                
+                const amountCAD = (Math.random() * (billType.cadRange[1] - billType.cadRange[0]) + billType.cadRange[0]).toFixed(2);
+                const amountUSD = (amountCAD * billType.usdFactor).toFixed(2);
+                const daysUntilDue = Math.floor(Math.random() * 30) - 5; // -5 to +25 days
+                const dueDate = new Date(Date.now() + daysUntilDue * 24 * 60 * 60 * 1000);
+                const paid = daysUntilDue < 0 ? (Math.random() > 0.3) : false; // 70% of past bills are paid
+                
+                bills.push({
+                    id: `demo-bill-${i}`,
+                    name: billType.name,
+                    amount_cad: parseFloat(amountCAD),
+                    amount_usd: parseFloat(amountUSD),
+                    due_date: dueDate.toISOString().split('T')[0],
+                    paid: paid,
+                    paid_at: paid ? new Date(dueDate.getTime() - Math.random() * 3 * 24 * 60 * 60 * 1000).toISOString() : null,
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                });
+            }
+            
+            return bills.sort((a, b) => new Date(a.due_date) - new Date(b.due_date));
+        }
+
+        function generateDemoSettings() {
+            const sprintEnd = new Date(Date.now() + 9 * 24 * 60 * 60 * 1000); // 9 days from now
+            const hourlyRates = [45, 55, 65, 75, 85];
+            const taxRates = [25, 30, 35];
+            const initialBalances = [200, 300, 400, 500, 600];
+            
+            return {
+                sprint_end_date: sprintEnd.toISOString(),
+                target_bills_mode: 'auto_unpaid',
+                target_bills_manual: 0,
+                initial_balance: initialBalances[Math.floor(Math.random() * initialBalances.length)],
+                initial_balance_currency: Math.random() > 0.5 ? 'USD' : 'CAD',
+                default_hourly_rate: hourlyRates[Math.floor(Math.random() * hourlyRates.length)],
+                tax_reserve_rate: taxRates[Math.floor(Math.random() * taxRates.length)],
+                exchange_rate_cad_to_usd: 0.7143
+            };
+        }
+
+        function isDemoModeActive() {
+            return !localStorage.getItem('authToken');
+        }
+
+        // ===== DEMO MODE: Load Demo Data =====
+        
+        function loadDemoMode() {
+            console.log('🎭 Loading Demo Mode...');
+            isDemoMode = true;
+            
+            // Check if we have demo data in sessionStorage
+            const storedSessions = sessionStorage.getItem('demoSessions');
+            const storedBills = sessionStorage.getItem('demoBills');
+            const storedSettings = sessionStorage.getItem('demoSettings');
+            
+            if (storedSessions && storedBills && storedSettings) {
+                // Load existing demo data from this session
+                sessions = JSON.parse(storedSessions);
+                bills = JSON.parse(storedBills);
+                userSettings = JSON.parse(storedSettings);
+                console.log('📦 Loaded demo data from session storage');
+            } else {
+                // Generate fresh demo data
+                sessions = generateRandomSessions();
+                bills = generateRandomBills();
+                userSettings = generateDemoSettings();
+                
+                // Store in sessionStorage
+                sessionStorage.setItem('demoSessions', JSON.stringify(sessions));
+                sessionStorage.setItem('demoBills', JSON.stringify(bills));
+                sessionStorage.setItem('demoSettings', JSON.stringify(userSettings));
+                console.log('✨ Generated fresh demo data');
+            }
+            
+            // Update DEADLINE from demo settings
+            DEADLINE = new Date(userSettings.sprint_end_date);
+            
+            // Recalculate target and render
+            recalculateTarget();
+            renderSessions();
+            renderBills();
+            updateStats();
+            
+            // Show demo banner and auth buttons
+            showDemoModeBanner();
+            showAuthButtons();
+            
+            // Initialize timers
+            initializeTimers();
+            
+            console.log(`🎭 Demo Mode Active: ${sessions.length} sessions, ${bills.length} bills`);
+        }
+
+        function showDemoModeBanner() {
+            const banner = document.createElement('div');
+            banner.id = 'demoBanner';
+            banner.className = 'demo-banner';
+            banner.innerHTML = `
+                <div class="demo-banner-content">
+                    <span class="demo-banner-icon">🎭</span>
+                    <span class="demo-banner-text">DEMO MODE - You're trying out the app! Data won't be saved.</span>
+                    <button class="demo-banner-btn" onclick="showRegisterModal()">Create Account</button>
+                    <button class="demo-banner-dismiss" onclick="dismissDemoBanner()">✖</button>
+                </div>
+            `;
+            document.body.insertBefore(banner, document.body.firstChild);
+        }
+
+        function dismissDemoBanner() {
+            const banner = document.getElementById('demoBanner');
+            if (banner) {
+                banner.style.display = 'none';
+            }
+        }
+
+        function showAuthButtons() {
+            // Replace burger menu with auth buttons
+            const burgerBtn = document.querySelector('.burger-btn');
+            if (burgerBtn) {
+                burgerBtn.style.display = 'none';
+            }
+            
+            const authButtons = document.createElement('div');
+            authButtons.className = 'auth-buttons';
+            authButtons.innerHTML = `
+                <button class="btn-auth btn-login" onclick="showLoginModal()">Login</button>
+                <button class="btn-auth btn-register" onclick="showRegisterModal()">Register</button>
+            `;
+            
+            const header = document.querySelector('.header-top');
+            if (header) {
+                header.appendChild(authButtons);
+            }
+        }
+
+        function showUserMenu() {
+            const burgerBtn = document.querySelector('.burger-btn');
+            if (burgerBtn) {
+                burgerBtn.style.display = 'block';
+            }
+            
+            const authButtons = document.querySelector('.auth-buttons');
+            if (authButtons) {
+                authButtons.remove();
+            }
+        }
 
         // Auth Check & Initialization
         window.addEventListener('DOMContentLoaded', async () => {
             const token = localStorage.getItem('authToken');
+            
             if (!token) {
-                window.location.href = '/login.html';
+                // No token = Load demo mode
+                loadDemoMode();
                 return;
             }
 
+            // Has token = Try to load user data
             try {
                 currentUser = await window.api.getProfile();
                 await loadDashboardData();
                 initializeTimers();
+                showUserMenu();
             } catch (error) {
                 console.error('Auth error:', error);
-                window.location.href = '/login.html';
+                // Token invalid = Clear it and load demo mode
+                localStorage.removeItem('authToken');
+                loadDemoMode();
             }
         });
 
@@ -2196,6 +2689,7 @@
             try {
                 await window.api.updateSettings(settings);
                 await loadDashboardData();
+                updateStats(); // Force immediate stats refresh
                 closeSprintSettingsModal();
                 alert('✅ Sprint settings saved successfully!');
             } catch (error) {
@@ -2644,7 +3138,110 @@
             if (e.target.id === 'sprintSettingsModal') closeSprintSettingsModal();
         });
 
-        // ESC key to close
+        // ===== AUTH MODAL HANDLERS =====
+
+        function showLoginModal() {
+            document.getElementById('loginModal').classList.add('active');
+        }
+
+        function closeLoginModal() {
+            document.getElementById('loginModal').classList.remove('active');
+            document.getElementById('loginErrorMessage').style.display = 'none';
+        }
+
+        function showRegisterModal() {
+            document.getElementById('registerModal').classList.add('active');
+        }
+
+        function closeRegisterModal() {
+            document.getElementById('registerModal').classList.remove('active');
+            document.getElementById('registerErrorMessage').style.display = 'none';
+        }
+
+        function switchToRegister() {
+            closeLoginModal();
+            showRegisterModal();
+        }
+
+        function switchToLogin() {
+            closeRegisterModal();
+            showLoginModal();
+        }
+
+        async function handleLoginSubmit(event) {
+            event.preventDefault();
+
+            const email = document.getElementById('modalLoginEmail').value;
+            const password = document.getElementById('modalLoginPassword').value;
+
+            try {
+                const response = await window.api.login(email, password);
+                localStorage.setItem('authToken', response.token);
+                
+                // Clear demo data
+                sessionStorage.removeItem('demoSessions');
+                sessionStorage.removeItem('demoBills');
+                sessionStorage.removeItem('demoSettings');
+                isDemoMode = false;
+
+                // Remove demo banner
+                const banner = document.getElementById('demoBanner');
+                if (banner) banner.remove();
+
+                // Close modal
+                closeLoginModal();
+
+                // Load user data
+                currentUser = await window.api.getProfile();
+                await loadDashboardData();
+                showUserMenu();
+
+                console.log('✅ Logged in successfully');
+            } catch (error) {
+                const errorDiv = document.getElementById('loginErrorMessage');
+                errorDiv.textContent = error.message || 'Login failed. Please check your credentials.';
+                errorDiv.style.display = 'block';
+            }
+        }
+
+        async function handleRegisterSubmit(event) {
+            event.preventDefault();
+
+            const name = document.getElementById('modalRegisterName').value;
+            const email = document.getElementById('modalRegisterEmail').value;
+            const password = document.getElementById('modalRegisterPassword').value;
+
+            try {
+                const response = await window.api.register(name, email, password);
+                localStorage.setItem('authToken', response.token);
+                
+                // Clear demo data
+                sessionStorage.removeItem('demoSessions');
+                sessionStorage.removeItem('demoBills');
+                sessionStorage.removeItem('demoSettings');
+                isDemoMode = false;
+
+                // Remove demo banner
+                const banner = document.getElementById('demoBanner');
+                if (banner) banner.remove();
+
+                // Close modal
+                closeRegisterModal();
+
+                // Load user data
+                currentUser = await window.api.getProfile();
+                await loadDashboardData();
+                showUserMenu();
+
+                console.log('✅ Registered and logged in successfully');
+            } catch (error) {
+                const errorDiv = document.getElementById('registerErrorMessage');
+                errorDiv.textContent = error.message || 'Registration failed. Please try again.';
+                errorDiv.style.display = 'block';
+            }
+        }
+
+        // ESC key to close (including auth modals)
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 closeBurgerMenu();
@@ -2653,6 +3250,8 @@
                 closeEditSessionModal();
                 closeEditBillModal();
                 closeSprintSettingsModal();
+                closeLoginModal();
+                closeRegisterModal();
             }
         });
     </script>
