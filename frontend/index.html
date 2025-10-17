@@ -1632,69 +1632,6 @@
             }
         }
 
-        // Add Manual Session
-        async function addManualSession(event) {
-            event.preventDefault();
-
-            const dateInput = document.getElementById('manualDate').value;
-            const startTime = document.getElementById('manualStartTime').value;
-            const endTime = document.getElementById('manualEndTime').value;
-            const rate = parseFloat(document.getElementById('manualRate').value);
-            const note = document.getElementById('manualNote').value;
-
-            if (!dateInput || !startTime || !endTime) {
-                alert('Please fill in Date, Start Time, and End Time');
-                return;
-            }
-
-            const entryDate = new Date(dateInput);
-            const [startHour, startMinute] = startTime.split(':').map(Number);
-            const [endHour, endMinute] = endTime.split(':').map(Number);
-
-            let startTotalMinutes = startHour * 60 + startMinute;
-            let endTotalMinutes = endHour * 60 + endMinute;
-            if (endTotalMinutes <= startTotalMinutes) endTotalMinutes += 24 * 60;
-
-            const hours = (endTotalMinutes - startTotalMinutes) / 60;
-
-            const startTimeFormatted = new Date(entryDate);
-            startTimeFormatted.setHours(startHour, startMinute);
-            const endTimeFormatted = new Date(entryDate);
-            endTimeFormatted.setHours(endHour, endMinute);
-
-            const timeDisplay = `${startTimeFormatted.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })} - ${endTimeFormatted.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}`;
-
-            const isLeisure = rate === 0;
-            const earnings = isLeisure ? 0 : hours * rate;
-            const opportunityCost = isLeisure ? hours * 24 : 0;
-
-            const sessionData = {
-                time_display: timeDisplay,
-                timestamp: entryDate.toISOString(),
-                date: entryDate.toISOString().split('T')[0],
-                hours: parseFloat(hours.toFixed(2)),
-                rate: rate,
-                earnings: parseFloat(earnings.toFixed(2)),
-                note: note,
-                is_leisure: isLeisure,
-                opportunity_cost: parseFloat(opportunityCost.toFixed(2)),
-                is_manual: true
-            };
-
-            try {
-                await window.api.createSession(sessionData);
-                await loadDashboardData();
-                closeAddSessionModal();
-
-                // Reset form
-                document.getElementById('manualStartTime').value = '';
-                document.getElementById('manualEndTime').value = '';
-                document.getElementById('manualNote').value = '';
-            } catch (error) {
-                alert('Error adding session: ' + error.message);
-            }
-        }
-
         // Add Bill
         async function addBill(event) {
             event.preventDefault();
