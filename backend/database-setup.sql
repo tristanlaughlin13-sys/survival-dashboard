@@ -71,6 +71,7 @@ CREATE TABLE IF NOT EXISTS user_settings (
     sprint_end_date TIMESTAMP WITH TIME ZONE DEFAULT (CURRENT_TIMESTAMP + INTERVAL '9 days'),
     target_bills_mode VARCHAR(20) DEFAULT 'auto_unpaid' CHECK (target_bills_mode IN ('auto_unpaid', 'auto_all', 'manual')),
     target_bills_manual DECIMAL(10, 2) DEFAULT 0 CHECK (target_bills_manual >= 0),
+    initial_balance DECIMAL(10, 2) DEFAULT 0 CHECK (initial_balance >= 0),
     default_hourly_rate DECIMAL(10, 2) DEFAULT 55.00 CHECK (default_hourly_rate >= 0),
     tax_reserve_rate DECIMAL(5, 2) DEFAULT 30.00 CHECK (tax_reserve_rate >= 0 AND tax_reserve_rate <= 100),
     exchange_rate_cad_to_usd DECIMAL(10, 4) DEFAULT 0.7143 CHECK (exchange_rate_cad_to_usd > 0),

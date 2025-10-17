@@ -1292,6 +1292,15 @@
                         <input type="number" id="targetBillsManual" step="0.01" min="0" placeholder="0.00">
                     </div>
                 </div>
+                <div class="form-row full">
+                    <div class="input-group">
+                        <label>💰 Initial Balance (Starting Earnings)</label>
+                        <input type="number" id="initialBalance" step="0.01" min="0" placeholder="0.00" required>
+                        <div style="font-size: 0.8em; color: #666; margin-top: 5px;">
+                            Money you already earned before tracking started (e.g., $475.00)
+                        </div>
+                    </div>
+                </div>
                 <div class="form-row">
                     <div class="input-group">
                         <label>Default Hourly Rate ($)</label>
@@ -1747,7 +1756,10 @@
             const todayHours = todaySessions.reduce((sum, s) => sum + parseFloat(s.hours), 0);
             const todayEarnings = todaySessions.filter(s => !s.is_leisure).reduce((sum, s) => sum + parseFloat(s.earnings), 0);
 
-            const totalEarned = sessions.filter(s => !s.is_leisure).reduce((sum, s) => sum + parseFloat(s.earnings), 0);
+            // Calculate total earned from sessions + initial balance
+            const sessionsEarned = sessions.filter(s => !s.is_leisure).reduce((sum, s) => sum + parseFloat(s.earnings), 0);
+            const initialBalance = userSettings ? (userSettings.initial_balance || 0) : 0;
+            const totalEarned = sessionsEarned + initialBalance;
 
             // Calculate bills based on target_bills_mode
             const totalBillsUSD = TOTAL_NEEDED;
@@ -1980,6 +1992,7 @@
 
                 document.getElementById('targetBillsMode').value = settings.target_bills_mode || 'auto_unpaid';
                 document.getElementById('targetBillsManual').value = settings.target_bills_manual || 0;
+                document.getElementById('initialBalance').value = settings.initial_balance || 0;
                 document.getElementById('defaultHourlyRate').value = settings.default_hourly_rate || 55;
                 document.getElementById('taxReserveRate').value = settings.tax_reserve_rate || 30;
                 document.getElementById('exchangeRate').value = settings.exchange_rate_cad_to_usd || 0.7143;
@@ -2008,6 +2021,7 @@
                 sprint_end_date: new Date(document.getElementById('sprintEndDate').value).toISOString(),
                 target_bills_mode: document.getElementById('targetBillsMode').value,
                 target_bills_manual: parseFloat(document.getElementById('targetBillsManual').value) || 0,
+                initial_balance: parseFloat(document.getElementById('initialBalance').value) || 0,
                 default_hourly_rate: parseFloat(document.getElementById('defaultHourlyRate').value),
                 tax_reserve_rate: parseFloat(document.getElementById('taxReserveRate').value),
                 exchange_rate_cad_to_usd: parseFloat(document.getElementById('exchangeRate').value)
