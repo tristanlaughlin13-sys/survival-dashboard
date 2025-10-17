@@ -33,9 +33,23 @@ class API {
         throw new Error('Authentication required');
       }
 
+      // Handle rate limiting
+      if (response.status === 429) {
+        throw new Error('Too many login attempts. Please wait a few minutes and try again.');
+      }
+
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'API request failed');
+        // Try to parse JSON error, fallback to text
+        let errorMessage = 'API request failed';
+        try {
+          const error = await response.json();
+          errorMessage = error.error || error.message || errorMessage;
+        } catch (e) {
+          // Not JSON, try text
+          const text = await response.text();
+          errorMessage = text || errorMessage;
+        }
+        throw new Error(errorMessage);
       }
 
       return await response.json();
