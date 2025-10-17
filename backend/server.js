@@ -30,15 +30,15 @@ pool.query('SELECT NOW()', (err, res) => {
 app.use(helmet());
 
 // CORS Configuration
-const allowedOrigins = process.env.ALLOWED_ORIGINS 
+const allowedOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim())
   : ['http://localhost:3000', 'http://localhost:8000', 'http://localhost:5173'];
 
 app.use(cors({
-  origin: function(origin, callback) {
+  origin: function (origin, callback) {
     // Allow requests with no origin (mobile apps, Postman, etc.)
     if (!origin) return callback(null, true);
-    
+
     if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
@@ -78,7 +78,7 @@ const authenticateToken = async (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    
+
     // Verify user still exists
     const userResult = await pool.query(
       'SELECT id, email, name FROM users WHERE id = $1',
@@ -103,9 +103,9 @@ const authenticateToken = async (req, res, next) => {
 const handleValidationErrors = (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    return res.status(400).json({ 
-      error: 'Validation failed', 
-      details: errors.array() 
+    return res.status(400).json({
+      error: 'Validation failed',
+      details: errors.array()
     });
   }
   next();
@@ -132,7 +132,7 @@ app.get('/health', async (req, res) => {
 // ===== Authentication Routes =====
 
 // Register
-app.post('/api/auth/register', 
+app.post('/api/auth/register',
   authLimiter,
   [
     body('email').isEmail().normalizeEmail(),
@@ -723,11 +723,204 @@ app.get('/api/export', authenticateToken, apiLimiter, async (req, res) => {
   }
 });
 
+// Export bills as CSV
+app.get('/api/bills/export-csv', authenticateToken, apiLimiter, async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT * FROM bills WHERE user_id = $1 ORDER BY due_date ASC, created_at DESC',
+      [req.user.id]
+    );
+
+    // Generate CSV
+    const bills = result.rows;
+    let csv = 'Name,Amount (CAD),Amount (USD),Due Date,Paid\n';
+
+    bills.forEach(bill => {
+      csv += `"${bill.name}",${bill.amount_cad},${bill.amount_usd},${bill.due_date || ''},${bill.paid ? 'Yes' : 'No'}\n`;
+    });
+
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename="bills-export-${new Date().toISOString().split('T')[0]}.csv"`);
+    res.send(csv);
+  } catch (error) {
+    console.error('CSV export error:', error);
+    res.status(500).json({ error: 'Failed to export bills as CSV' });
+  }
+});
+
+// Import bills from CSV (expects CSV with headers: Name,Amount (CAD),Amount (USD),Due Date,Paid)
+app.post('/api/bills/import-csv',
+  authenticateToken,
+  apiLimiter,
+  [
+    body('csvData').isString().notEmpty()
+  ],
+  handleValidationErrors,
+  async (req, res) => {
+    try {
+      const { csvData } = req.body;
+      const lines = csvData.split('\n').filter(line => line.trim());
+
+      if (lines.length < 2) {
+        return res.status(400).json({ error: 'CSV file is empty or invalid' });
+      }
+
+      // Skip header line
+      const dataLines = lines.slice(1);
+      const imported = [];
+      const errors = [];
+
+      for (let i = 0; i < dataLines.length; i++) {
+        const line = dataLines[i];
+        // Simple CSV parsing (handles quoted fields)
+        const matches = line.match(/(".*?"|[^,]+)(?=\s*,|\s*$)/g);
+
+        if (!matches || matches.length < 5) {
+          errors.push({ line: i + 2, error: 'Invalid CSV format' });
+          continue;
+        }
+
+        const [name, amountCAD, amountUSD, dueDate, paid] = matches.map(m => m.replace(/^"|"$/g, '').trim());
+
+        try {
+          const result = await pool.query(
+            `INSERT INTO bills (user_id, name, amount_cad, amount_usd, due_date, paid)
+             VALUES ($1, $2, $3, $4, $5, $6)
+             RETURNING *`,
+            [
+              req.user.id,
+              name || 'Imported Bill',
+              parseFloat(amountCAD) || 0,
+              parseFloat(amountUSD) || 0,
+              dueDate || null,
+              paid?.toLowerCase() === 'yes' || paid?.toLowerCase() === 'true'
+            ]
+          );
+          imported.push(result.rows[0]);
+        } catch (error) {
+          console.error(`Error importing bill line ${i + 2}:`, error);
+          errors.push({ line: i + 2, error: error.message });
+        }
+      }
+
+      res.json({
+        message: 'Import completed',
+        imported: imported.length,
+        errors: errors.length,
+        details: errors
+      });
+    } catch (error) {
+      console.error('CSV import error:', error);
+      res.status(500).json({ error: 'Failed to import bills from CSV' });
+    }
+  }
+);
+
+// ===== User Settings Routes =====
+
+// Get user settings (create default if not exists)
+app.get('/api/settings', authenticateToken, apiLimiter, async (req, res) => {
+  try {
+    let result = await pool.query(
+      'SELECT * FROM user_settings WHERE user_id = $1',
+      [req.user.id]
+    );
+
+    // If no settings exist, create default settings
+    if (result.rows.length === 0) {
+      result = await pool.query(
+        `INSERT INTO user_settings (user_id)
+         VALUES ($1)
+         RETURNING *`,
+        [req.user.id]
+      );
+    }
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Fetch settings error:', error);
+    res.status(500).json({ error: 'Failed to fetch settings' });
+  }
+});
+
+// Update user settings
+app.put('/api/settings',
+  authenticateToken,
+  apiLimiter,
+  [
+    body('sprint_end_date').optional().isISO8601(),
+    body('target_bills_mode').optional().isIn(['auto_unpaid', 'auto_all', 'manual']),
+    body('target_bills_manual').optional().isFloat({ min: 0 }),
+    body('default_hourly_rate').optional().isFloat({ min: 0 }),
+    body('tax_reserve_rate').optional().isFloat({ min: 0, max: 100 }),
+    body('exchange_rate_cad_to_usd').optional().isFloat({ min: 0 })
+  ],
+  handleValidationErrors,
+  async (req, res) => {
+    try {
+      // First, ensure settings exist
+      let checkResult = await pool.query(
+        'SELECT id FROM user_settings WHERE user_id = $1',
+        [req.user.id]
+      );
+
+      if (checkResult.rows.length === 0) {
+        await pool.query(
+          'INSERT INTO user_settings (user_id) VALUES ($1)',
+          [req.user.id]
+        );
+      }
+
+      // Build update query
+      const updateFields = [];
+      const updateValues = [];
+      let paramIndex = 1;
+
+      const allowedFields = [
+        'sprint_end_date',
+        'target_bills_mode',
+        'target_bills_manual',
+        'default_hourly_rate',
+        'tax_reserve_rate',
+        'exchange_rate_cad_to_usd'
+      ];
+
+      allowedFields.forEach(field => {
+        if (req.body[field] !== undefined) {
+          updateFields.push(`${field} = $${paramIndex}`);
+          updateValues.push(req.body[field]);
+          paramIndex++;
+        }
+      });
+
+      if (updateFields.length === 0) {
+        return res.status(400).json({ error: 'No fields to update' });
+      }
+
+      updateValues.push(req.user.id);
+
+      const result = await pool.query(
+        `UPDATE user_settings SET ${updateFields.join(', ')}
+         WHERE user_id = $${paramIndex}
+         RETURNING *`,
+        updateValues
+      );
+
+      console.log(`✅ Settings updated for user ${req.user.email}`);
+
+      res.json(result.rows[0]);
+    } catch (error) {
+      console.error('Update settings error:', error);
+      res.status(500).json({ error: 'Failed to update settings' });
+    }
+  }
+);
+
 // ===== Error Handling =====
 
 app.use((err, req, res, next) => {
   console.error('Server error:', err);
-  res.status(500).json({ 
+  res.status(500).json({
     error: 'Internal server error',
     message: process.env.NODE_ENV === 'development' ? err.message : undefined
   });

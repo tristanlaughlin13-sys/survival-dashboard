@@ -141,6 +141,38 @@ class API {
   async exportData() {
     return await this.request('/api/export');
   }
+
+  // Settings endpoints
+  async getSettings() {
+    return await this.request('/api/settings');
+  }
+
+  async updateSettings(settings) {
+    return await this.request('/api/settings', {
+      method: 'PUT',
+      body: JSON.stringify(settings)
+    });
+  }
+
+  // Bills CSV import/export
+  async exportBillsCSV() {
+    const response = await fetch(`${API_URL}/api/bills/export-csv`, {
+      headers: this.getHeaders()
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to export bills CSV');
+    }
+
+    return await response.blob();
+  }
+
+  async importBillsCSV(csvData) {
+    return await this.request('/api/bills/import-csv', {
+      method: 'POST',
+      body: JSON.stringify({ csvData })
+    });
+  }
 }
 
 // Export singleton instance

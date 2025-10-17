@@ -953,16 +953,27 @@
                 <button class="burger-close" onclick="closeBurgerMenu()">✕</button>
             </div>
             <div class="burger-menu-item" onclick="exportData()">
-                📥 Export Data
+                📥 Export Data (JSON)
             </div>
             <div class="burger-menu-item" onclick="importData()">
-                📤 Import Data
+                📤 Import Data (JSON)
+            </div>
+            <div class="burger-menu-item" onclick="exportBillsCSV()">
+                📋 Export Bills (CSV)
+            </div>
+            <div class="burger-menu-item" onclick="importBillsCSV()">
+                📂 Import Bills (CSV)
+            </div>
+            <div class="burger-menu-item" onclick="showSprintSettingsModal()">
+                ⚙️ Sprint Settings
             </div>
             <div class="burger-menu-item logout" onclick="handleLogout()">
                 🚪 Logout
             </div>
         </div>
         <input type="file" id="importFile" accept=".json" style="display: none;" onchange="handleImport(event)">
+        <input type="file" id="importBillsCsvFile" accept=".csv" style="display: none;"
+            onchange="handleBillsCsvImport(event)">
 
         <!-- Countdown Banner -->
         <div class="deadline-countdown">
@@ -1191,11 +1202,131 @@
         </div>
     </div>
 
+    <!-- Edit Session Modal -->
+    <div class="modal" id="editSessionModal">
+        <div class="modal-content">
+            <div class="modal-header">✏️ Edit Work Session</div>
+            <form onsubmit="updateSession(event)">
+                <input type="hidden" id="editSessionId">
+                <div class="form-row">
+                    <div class="input-group">
+                        <label>Date</label>
+                        <input type="date" id="editSessionDate" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Start Time</label>
+                        <input type="time" id="editSessionTime" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="input-group">
+                        <label>Hours Worked</label>
+                        <input type="number" id="editSessionHours" step="0.01" min="0" placeholder="0.00" required
+                            onchange="calculateEditEarnings()">
+                    </div>
+                    <div class="input-group">
+                        <label>Hourly Rate ($)</label>
+                        <input type="number" id="editSessionRate" step="0.01" min="0" placeholder="0.00" required
+                            onchange="calculateEditEarnings()">
+                    </div>
+                </div>
+                <div class="form-row full">
+                    <div class="input-group">
+                        <label>Notes</label>
+                        <input type="text" id="editSessionNote" placeholder="What did you work on?">
+                    </div>
+                </div>
+                <div class="form-row full">
+                    <div class="input-group">
+                        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                            <input type="checkbox" id="editSessionLeisure" style="width: auto;"
+                                onchange="calculateEditEarnings()">
+                            <span>This is leisure/break time (no earnings)</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="stat-item"
+                    style="margin-top: 15px; padding: 15px; background: #2a2a2a; border-radius: 8px;">
+                    <div class="stat-label">Calculated Earnings</div>
+                    <div class="stat-value" id="editSessionEarnings">$0.00</div>
+                </div>
+                <div class="modal-actions">
+                    <button type="submit" class="btn-modal-primary">Save Changes</button>
+                    <button type="button" class="btn-modal-secondary" onclick="closeEditSessionModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Sprint Settings Modal -->
+    <div class="modal" id="sprintSettingsModal">
+        <div class="modal-content">
+            <div class="modal-header">⚙️ Sprint Settings</div>
+            <form onsubmit="saveSprintSettings(event)">
+                <div class="form-row full">
+                    <div class="input-group">
+                        <label>Sprint End Date & Time</label>
+                        <input type="datetime-local" id="sprintEndDate" required>
+                        <div style="font-size: 0.8em; color: #666; margin-top: 5px;">
+                            The deadline for your sprint
+                        </div>
+                    </div>
+                </div>
+                <div class="form-row full">
+                    <div class="input-group">
+                        <label>Target Bills Mode</label>
+                        <select id="targetBillsMode" onchange="toggleManualTarget()"
+                            style="padding: 10px; background: #2a2a2a; color: #fff; border: 2px solid #333; border-radius: 8px; font-size: 1em;">
+                            <option value="auto_unpaid">Auto - Unpaid Bills Only</option>
+                            <option value="auto_all">Auto - All Bills</option>
+                            <option value="manual">Manual Target</option>
+                        </select>
+                        <div style="font-size: 0.8em; color: #666; margin-top: 5px;">
+                            How to calculate your sprint target
+                        </div>
+                    </div>
+                </div>
+                <div class="form-row full" id="manualTargetRow" style="display: none;">
+                    <div class="input-group">
+                        <label>Manual Target Amount ($)</label>
+                        <input type="number" id="targetBillsManual" step="0.01" min="0" placeholder="0.00">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="input-group">
+                        <label>Default Hourly Rate ($)</label>
+                        <input type="number" id="defaultHourlyRate" step="0.01" min="0" placeholder="55.00" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Tax Reserve Rate (%)</label>
+                        <input type="number" id="taxReserveRate" step="0.01" min="0" max="100" placeholder="30.00"
+                            required>
+                    </div>
+                </div>
+                <div class="form-row full">
+                    <div class="input-group">
+                        <label>CAD to USD Exchange Rate</label>
+                        <input type="number" id="exchangeRate" step="0.0001" min="0" placeholder="0.7143" required>
+                        <div style="font-size: 0.8em; color: #666; margin-top: 5px;">
+                            1 CAD = ? USD (e.g., 0.7143 means $1 CAD = $0.71 USD)
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="submit" class="btn-modal-primary">Save Settings</button>
+                    <button type="button" class="btn-modal-secondary"
+                        onclick="closeSprintSettingsModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script src="js/api.js"></script>
     <script>
         // Global State
-        const DEADLINE = new Date('2025-10-24T23:59:59');
+        let DEADLINE = new Date('2025-10-24T23:59:59');
         let TOTAL_NEEDED = 2945;
+        let userSettings = null;
         let currentUser = null;
         let timerInterval = null;
         let timerSeconds = 0;
@@ -1234,11 +1365,51 @@
 
         // Load All Dashboard Data
         async function loadDashboardData() {
+            // Load settings first, then use them for calculations
+            await loadSettings();
             await Promise.all([
                 loadSessions(),
                 loadBills(),
                 loadStats()
             ]);
+        }
+
+        async function loadSettings() {
+            try {
+                userSettings = await window.api.getSettings();
+
+                // Update DEADLINE based on settings
+                DEADLINE = new Date(userSettings.sprint_end_date);
+
+                // Update deadline display
+                const deadlineStr = DEADLINE.toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+                const subtitleEl = document.querySelector('.header-subtitle');
+                if (subtitleEl) {
+                    subtitleEl.textContent = `Last Day to Work: ${deadlineStr}`;
+                }
+
+                // Update countdown label
+                const countdownLabel = document.querySelector('.countdown-label');
+                if (countdownLabel) {
+                    countdownLabel.textContent = `Until ${deadlineStr} Work Deadline`;
+                }
+
+                // Calculate TOTAL_NEEDED based on settings
+                if (userSettings.target_bills_mode === 'manual') {
+                    TOTAL_NEEDED = userSettings.target_bills_manual;
+                } else if (userSettings.target_bills_mode === 'auto_all') {
+                    TOTAL_NEEDED = bills.reduce((sum, bill) => sum + parseFloat(bill.amount_usd), 0);
+                } else { // auto_unpaid (default)
+                    TOTAL_NEEDED = bills.filter(b => !b.paid).reduce((sum, bill) => sum + parseFloat(bill.amount_usd), 0);
+                }
+            } catch (error) {
+                console.error('Error loading settings:', error);
+                // Use defaults if settings fail to load
+            }
         }
 
         // Countdown Timer
@@ -1578,21 +1749,39 @@
 
             const totalEarned = sessions.filter(s => !s.is_leisure).reduce((sum, s) => sum + parseFloat(s.earnings), 0);
 
-            const totalBillsUSD = bills.filter(b => !b.paid).reduce((sum, b) => sum + parseFloat(b.amount_usd), 0);
+            // Calculate bills based on target_bills_mode
+            const totalBillsUSD = TOTAL_NEEDED;
             const totalBillsCAD = bills.filter(b => !b.paid).reduce((sum, b) => sum + parseFloat(b.amount_cad), 0);
-            const totalWithTax = totalBillsUSD / 0.67;
 
-            const remaining = totalWithTax - totalEarned;
+            // Use tax reserve rate from settings, default to 30% (0.67 = 1 - 0.33)
+            const taxReserveRate = userSettings ? userSettings.tax_reserve_rate : 30;
+            const afterTaxMultiplier = 1 / (1 - (taxReserveRate / 100));
+            const totalWithTax = totalBillsUSD * afterTaxMultiplier;
+
+            const remaining = Math.max(0, totalWithTax - totalEarned);
             const daysLeft = Math.max(1, Math.ceil((DEADLINE - new Date()) / (1000 * 60 * 60 * 24)));
             const dailyGoal = remaining / daysLeft;
 
             const rateEl = document.getElementById('hourlyRate');
-            const rate = rateEl ? parseFloat(rateEl.value) : 24;
+            const defaultRate = userSettings ? userSettings.default_hourly_rate : 24;
+            const rate = rateEl ? parseFloat(rateEl.value) || defaultRate : defaultRate;
             const hoursPerDay = rate > 0 ? dailyGoal / rate : 0;
             const totalHours = rate > 0 ? remaining / rate : 0;
 
-            const progress = (totalEarned / totalWithTax) * 100;
-            const todayProgress = (todayEarnings / dailyGoal) * 100;
+            // Fix progress bar edge cases
+            let progress = 0;
+            if (totalWithTax > 0) {
+                progress = Math.min((totalEarned / totalWithTax) * 100, 100);
+            } else if (totalEarned > 0) {
+                progress = 100; // If no target but has earnings, show as complete
+            }
+
+            let todayProgress = 0;
+            if (dailyGoal > 0) {
+                todayProgress = (todayEarnings / dailyGoal) * 100;
+            } else if (todayEarnings > 0) {
+                todayProgress = 100; // If no daily goal but has earnings, show as complete
+            }
 
             const els = {
                 dailyGoal: document.getElementById('dailyGoal'),
@@ -1635,9 +1824,37 @@
 
             if (els.totalEarned) els.totalEarned.textContent = `$${Math.round(totalEarned)}`;
             if (els.totalNeeded) els.totalNeeded.textContent = Math.round(totalWithTax);
-            if (els.sprintProgress) els.sprintProgress.style.width = Math.min(progress, 100) + '%';
-            if (els.sprintProgressText) els.sprintProgressText.textContent = Math.round(progress) + '%';
-            if (els.remaining) els.remaining.textContent = `$${Math.round(remaining)}`;
+
+            if (els.sprintProgress) {
+                els.sprintProgress.style.width = Math.min(progress, 100) + '%';
+                // Change color if sprint is complete
+                if (progress >= 100) {
+                    els.sprintProgress.style.background = 'linear-gradient(90deg, #00ff88 0%, #00cc66 100%)';
+                } else {
+                    els.sprintProgress.style.background = '';
+                }
+            }
+
+            if (els.sprintProgressText) {
+                if (progress >= 100) {
+                    els.sprintProgressText.textContent = '🎉 COMPLETE!';
+                } else if (isNaN(progress) || !isFinite(progress)) {
+                    els.sprintProgressText.textContent = '0%';
+                } else {
+                    els.sprintProgressText.textContent = Math.round(progress) + '%';
+                }
+            }
+
+            if (els.remaining) {
+                if (remaining <= 0 && totalEarned > 0) {
+                    els.remaining.textContent = `+$${Math.round(totalEarned - totalWithTax)}`;
+                    els.remaining.style.color = '#00ff88';
+                } else {
+                    els.remaining.textContent = `$${Math.round(remaining)}`;
+                    els.remaining.style.color = '';
+                }
+            }
+
             if (els.daysLeft) els.daysLeft.textContent = daysLeft;
             if (els.todayHours) els.todayHours.textContent = todayHours.toFixed(1);
             if (els.todayEarnings) els.todayEarnings.textContent = `$${Math.round(todayEarnings)}`;
@@ -1683,6 +1900,127 @@
 
         function closeAddBillModal() {
             document.getElementById('addBillModal').classList.remove('show');
+        }
+
+        function showEditSessionModal(session) {
+            document.getElementById('editSessionId').value = session.id;
+
+            // Parse the date and time
+            const sessionDate = new Date(session.timestamp);
+            document.getElementById('editSessionDate').value = session.date;
+            document.getElementById('editSessionTime').value = sessionDate.toTimeString().substr(0, 5);
+            document.getElementById('editSessionHours').value = session.hours;
+            document.getElementById('editSessionRate').value = session.rate;
+            document.getElementById('editSessionNote').value = session.note || '';
+            document.getElementById('editSessionLeisure').checked = session.is_leisure || false;
+
+            calculateEditEarnings();
+            document.getElementById('editSessionModal').classList.add('show');
+        }
+
+        function closeEditSessionModal() {
+            document.getElementById('editSessionModal').classList.remove('show');
+        }
+
+        function calculateEditEarnings() {
+            const hours = parseFloat(document.getElementById('editSessionHours').value) || 0;
+            const rate = parseFloat(document.getElementById('editSessionRate').value) || 0;
+            const isLeisure = document.getElementById('editSessionLeisure').checked;
+
+            const earnings = isLeisure ? 0 : hours * rate;
+            document.getElementById('editSessionEarnings').textContent = `$${earnings.toFixed(2)}`;
+        }
+
+        async function updateSession(event) {
+            event.preventDefault();
+
+            const sessionId = document.getElementById('editSessionId').value;
+            const date = document.getElementById('editSessionDate').value;
+            const time = document.getElementById('editSessionTime').value;
+            const hours = parseFloat(document.getElementById('editSessionHours').value);
+            const rate = parseFloat(document.getElementById('editSessionRate').value);
+            const note = document.getElementById('editSessionNote').value;
+            const isLeisure = document.getElementById('editSessionLeisure').checked;
+
+            const timestamp = new Date(`${date}T${time}`).toISOString();
+            const earnings = isLeisure ? 0 : hours * rate;
+
+            try {
+                await window.api.updateSession(sessionId, {
+                    date,
+                    timestamp,
+                    time_display: time,
+                    hours,
+                    rate,
+                    earnings,
+                    note,
+                    is_leisure: isLeisure,
+                    opportunity_cost: isLeisure ? hours * rate : 0
+                });
+
+                await loadDashboardData();
+                closeEditSessionModal();
+                alert('✅ Session updated successfully!');
+            } catch (error) {
+                alert('❌ Error updating session: ' + error.message);
+            }
+        }
+
+        async function showSprintSettingsModal() {
+            closeBurgerMenu();
+
+            // Load current settings
+            try {
+                const settings = await window.api.getSettings();
+
+                // Convert sprint_end_date to datetime-local format
+                const sprintEnd = new Date(settings.sprint_end_date);
+                const dateStr = sprintEnd.toISOString().slice(0, 16);
+                document.getElementById('sprintEndDate').value = dateStr;
+
+                document.getElementById('targetBillsMode').value = settings.target_bills_mode || 'auto_unpaid';
+                document.getElementById('targetBillsManual').value = settings.target_bills_manual || 0;
+                document.getElementById('defaultHourlyRate').value = settings.default_hourly_rate || 55;
+                document.getElementById('taxReserveRate').value = settings.tax_reserve_rate || 30;
+                document.getElementById('exchangeRate').value = settings.exchange_rate_cad_to_usd || 0.7143;
+
+                toggleManualTarget();
+                document.getElementById('sprintSettingsModal').classList.add('show');
+            } catch (error) {
+                alert('❌ Error loading settings: ' + error.message);
+            }
+        }
+
+        function closeSprintSettingsModal() {
+            document.getElementById('sprintSettingsModal').classList.remove('show');
+        }
+
+        function toggleManualTarget() {
+            const mode = document.getElementById('targetBillsMode').value;
+            const manualRow = document.getElementById('manualTargetRow');
+            manualRow.style.display = mode === 'manual' ? 'block' : 'none';
+        }
+
+        async function saveSprintSettings(event) {
+            event.preventDefault();
+
+            const settings = {
+                sprint_end_date: new Date(document.getElementById('sprintEndDate').value).toISOString(),
+                target_bills_mode: document.getElementById('targetBillsMode').value,
+                target_bills_manual: parseFloat(document.getElementById('targetBillsManual').value) || 0,
+                default_hourly_rate: parseFloat(document.getElementById('defaultHourlyRate').value),
+                tax_reserve_rate: parseFloat(document.getElementById('taxReserveRate').value),
+                exchange_rate_cad_to_usd: parseFloat(document.getElementById('exchangeRate').value)
+            };
+
+            try {
+                await window.api.updateSettings(settings);
+                await loadDashboardData();
+                closeSprintSettingsModal();
+                alert('✅ Sprint settings saved successfully!');
+            } catch (error) {
+                alert('❌ Error saving settings: ' + error.message);
+            }
         }
 
         // Add Manual Session
@@ -1795,33 +2133,7 @@
             const session = sessions.find(s => s.id === id);
             if (!session) return;
 
-            const newRate = prompt(`Edit hourly rate (was $${session.rate}/hr):`, session.rate);
-            if (newRate === null) return;
-
-            const rate = parseFloat(newRate);
-            if (isNaN(rate) || rate < 0) {
-                alert('Please enter a valid rate (0 or higher)');
-                return;
-            }
-
-            const newNote = prompt(`Edit note (optional):`, session.note || '');
-            const hours = parseFloat(session.hours);
-            const isLeisure = rate === 0;
-            const newEarnings = isLeisure ? 0 : hours * rate;
-            const opportunityCost = isLeisure ? hours * 24 : 0;
-
-            try {
-                await window.api.updateSession(id, {
-                    rate: rate,
-                    earnings: newEarnings,
-                    note: newNote,
-                    is_leisure: isLeisure,
-                    opportunity_cost: opportunityCost
-                });
-                await loadDashboardData();
-            } catch (error) {
-                alert('Error updating session: ' + error.message);
-            }
+            showEditSessionModal(session);
         }
 
         // Delete Session
@@ -1988,6 +2300,77 @@
             event.target.value = '';
         }
 
+        // Export Bills CSV
+        async function exportBillsCSV() {
+            closeBurgerMenu();
+            try {
+                const blob = await window.api.exportBillsCSV();
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `bills-export-${new Date().toISOString().split('T')[0]}.csv`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                alert('✅ Bills exported as CSV successfully!');
+            } catch (error) {
+                alert('❌ Error exporting bills CSV: ' + error.message);
+            }
+        }
+
+        // Import Bills CSV
+        function importBillsCSV() {
+            document.getElementById('importBillsCsvFile').click();
+            closeBurgerMenu();
+        }
+
+        async function handleBillsCsvImport(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = async function (e) {
+                try {
+                    const csvData = e.target.result;
+
+                    // Check if user wants to add to existing data
+                    const hasExistingBills = bills.length > 0;
+                    if (hasExistingBills) {
+                        const confirmImport = confirm(
+                            `You have ${bills.length} bills in your account.\n\n` +
+                            'Import will ADD the bills from the CSV file to your existing bills.\n\n' +
+                            'Continue with import?'
+                        );
+                        if (!confirmImport) return;
+                    }
+
+                    const result = await window.api.importBillsCSV(csvData);
+
+                    let message = '✅ CSV Import Complete!\n\n';
+                    message += `📝 Imported ${result.imported} bill(s)\n`;
+                    if (result.errors > 0) {
+                        message += `⚠️ ${result.errors} error(s) encountered\n`;
+                        if (result.details && result.details.length > 0) {
+                            message += '\nErrors:\n';
+                            result.details.forEach(err => {
+                                message += `Line ${err.line}: ${err.error}\n`;
+                            });
+                        }
+                    }
+
+                    alert(message);
+                    await loadDashboardData();
+
+                } catch (err) {
+                    console.error('CSV import error:', err);
+                    alert('❌ Error importing CSV: ' + err.message);
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+
         // Logout
         function handleLogout() {
             if (confirm('Are you sure you want to logout?')) {
@@ -2005,12 +2388,22 @@
             if (e.target.id === 'addBillModal') closeAddBillModal();
         });
 
+        document.getElementById('editSessionModal').addEventListener('click', (e) => {
+            if (e.target.id === 'editSessionModal') closeEditSessionModal();
+        });
+
+        document.getElementById('sprintSettingsModal').addEventListener('click', (e) => {
+            if (e.target.id === 'sprintSettingsModal') closeSprintSettingsModal();
+        });
+
         // ESC key to close
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 closeBurgerMenu();
                 closeAddSessionModal();
                 closeAddBillModal();
+                closeEditSessionModal();
+                closeSprintSettingsModal();
             }
         });
     </script>
