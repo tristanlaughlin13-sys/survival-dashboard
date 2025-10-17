@@ -1087,35 +1087,6 @@
                     </div>
                 </div>
             </div>
-
-            <!-- Tax Savings Tracker -->
-            <div class="card warning">
-                <div class="card-title">💰 TAX RESERVE TRACKING</div>
-                <div class="stats-grid four-col">
-                    <div class="stat-item">
-                        <div class="stat-value" id="taxEarnings">$0</div>
-                        <div class="stat-label">Work Earnings</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value yellow" id="taxReserve">$0</div>
-                        <div class="stat-label">Should Save</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value green" id="taxAfter">$0</div>
-                        <div class="stat-label">After Taxes</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value" id="taxRate">30%</div>
-                        <div class="stat-label">Reserve Rate</div>
-                    </div>
-                </div>
-                <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #333;">
-                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; color: #999;">
-                        <input type="checkbox" id="taxIncludeInitial" onchange="updateStats()" style="width: auto;">
-                        <span>Include Initial Balance ($<span id="taxInitialAmount">0</span>) in tax calculation</span>
-                    </label>
-                </div>
-            </div>
         </div>
 
         <!-- Main Content: Sessions + Bills Side by Side -->
@@ -1152,6 +1123,35 @@
                     <div class="bills-total-label">TOTAL REMAINING</div>
                     <div class="bills-total-amount" id="billsTotal">$0.00</div>
                 </div>
+            </div>
+        </div>
+
+        <!-- Tax Savings Tracker (Bottom of Page) -->
+        <div class="card warning" style="max-width: 1400px; margin: 20px auto;">
+            <div class="card-title">💰 TAX RESERVE TRACKING</div>
+            <div class="stats-grid four-col">
+                <div class="stat-item">
+                    <div class="stat-value" id="taxEarnings">$0</div>
+                    <div class="stat-label">Work Earnings</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value yellow" id="taxReserve">$0</div>
+                    <div class="stat-label">Should Save</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value green" id="taxAfter">$0</div>
+                    <div class="stat-label">After Taxes</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="taxRate">30%</div>
+                    <div class="stat-label">Reserve Rate</div>
+                </div>
+            </div>
+            <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #333;">
+                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; color: #999;">
+                    <input type="checkbox" id="taxIncludeInitial" onchange="updateStats()" style="width: auto;">
+                    <span>Include Initial Balance ($<span id="taxInitialAmount">0</span>) in tax calculation</span>
+                </label>
             </div>
         </div>
     </div>
@@ -1859,166 +1859,188 @@
         }
 
         function updateStats() {
-            // Guard clause - ensure data is loaded
-            if (!Array.isArray(sessions) || !Array.isArray(bills)) {
-                console.warn('Data not loaded yet, skipping stats update');
-                return;
-            }
-
-            if (sessions.length === 0 && bills.length === 0) return;
-
-            const today = new Date().toDateString();
-            const todaySessions = sessions.filter(s => new Date(s.timestamp).toDateString() === today);
-
-            const todayHours = todaySessions.reduce((sum, s) => sum + parseFloat(s.hours), 0);
-            const todayEarnings = todaySessions.filter(s => !s.is_leisure).reduce((sum, s) => sum + parseFloat(s.earnings), 0);
-
-            // Calculate total earned from sessions + initial balance
-            const sessionsEarned = sessions.filter(s => !s.is_leisure).reduce((sum, s) => sum + parseFloat(s.earnings), 0);
-            let initialBalance = userSettings ? (userSettings.initial_balance || 0) : 0;
-
-            // Convert initial balance to USD if it's in CAD
-            if (userSettings && userSettings.initial_balance_currency === 'CAD') {
-                const exchangeRate = userSettings.exchange_rate_cad_to_usd || 0.7143;
-                initialBalance = initialBalance * exchangeRate;
-            }
-
-            const totalEarned = sessionsEarned + initialBalance;
-
-            // Calculate bills based on target_bills_mode
-            const totalBillsUSD = TOTAL_NEEDED;
-            const totalBillsCAD = bills.filter(b => !b.paid).reduce((sum, b) => sum + parseFloat(b.amount_cad), 0);
-
-            // Use tax reserve rate from settings, default to 30% (0.67 = 1 - 0.33)
-            const taxReserveRate = userSettings ? userSettings.tax_reserve_rate : 30;
-            const afterTaxMultiplier = 1 / (1 - (taxReserveRate / 100));
-            const totalWithTax = totalBillsUSD * afterTaxMultiplier;
-
-            const remaining = Math.max(0, totalWithTax - totalEarned);
-            const daysLeft = Math.max(1, Math.ceil((DEADLINE - new Date()) / (1000 * 60 * 60 * 24)));
-            const dailyGoal = remaining / daysLeft;
-
-            const rateEl = document.getElementById('hourlyRate');
-            const defaultRate = userSettings ? userSettings.default_hourly_rate : 24;
-            const rate = rateEl ? parseFloat(rateEl.value) || defaultRate : defaultRate;
-            const hoursPerDay = rate > 0 ? dailyGoal / rate : 0;
-            const totalHours = rate > 0 ? remaining / rate : 0;
-
-            // Fix progress bar edge cases
-            let progress = 0;
-            if (totalWithTax > 0) {
-                progress = Math.min((totalEarned / totalWithTax) * 100, 100);
-            } else if (totalEarned > 0) {
-                progress = 100; // If no target but has earnings, show as complete
-            }
-
-            let todayProgress = 0;
-            if (dailyGoal > 0) {
-                todayProgress = (todayEarnings / dailyGoal) * 100;
-            } else if (todayEarnings > 0) {
-                todayProgress = 100; // If no daily goal but has earnings, show as complete
-            }
-
-            // Calculate tax tracking
-            const taxIncludeInitial = document.getElementById('taxIncludeInitial')?.checked || false;
-            const taxEarningsAmount = taxIncludeInitial ? totalEarned : sessionsEarned;
-            const taxReserveAmount = taxEarningsAmount * (taxReserveRate / 100);
-            const taxAfterAmount = taxEarningsAmount - taxReserveAmount;
-
-            const els = {
-                dailyGoal: document.getElementById('dailyGoal'),
-                todayProgress: document.getElementById('todayProgress'),
-                todayProgressText: document.getElementById('todayProgressText'),
-                todayStatus: document.getElementById('todayStatus'),
-                totalEarned: document.getElementById('totalEarned'),
-                totalNeeded: document.getElementById('totalNeeded'),
-                sprintProgress: document.getElementById('sprintProgress'),
-                sprintProgressText: document.getElementById('sprintProgressText'),
-                remaining: document.getElementById('remaining'),
-                daysLeft: document.getElementById('daysLeft'),
-                todayHours: document.getElementById('todayHours'),
-                todayEarnings: document.getElementById('todayEarnings'),
-                hoursNeeded: document.getElementById('hoursNeeded'),
-                totalHoursNeeded: document.getElementById('totalHoursNeeded'),
-                billsTotalCAD: document.getElementById('billsTotalCAD'),
-                billsTotalUSD: document.getElementById('billsTotalUSD'),
-                billsWithTax: document.getElementById('billsWithTax'),
-                billsCovered: document.getElementById('billsCovered'),
-                taxEarnings: document.getElementById('taxEarnings'),
-                taxReserve: document.getElementById('taxReserve'),
-                taxAfter: document.getElementById('taxAfter'),
-                taxRate: document.getElementById('taxRate'),
-                taxInitialAmount: document.getElementById('taxInitialAmount')
-            };
-
-            if (els.dailyGoal) els.dailyGoal.textContent = `$${Math.round(dailyGoal)}`;
-            if (els.todayProgress) {
-                els.todayProgress.style.width = Math.min(todayProgress, 100) + '%';
-                els.todayProgress.classList.toggle('behind', todayProgress < 100);
-            }
-            if (els.todayProgressText) els.todayProgressText.textContent = `$${Math.round(todayEarnings)} / $${Math.round(dailyGoal)}`;
-
-            if (els.todayStatus) {
-                if (todayEarnings >= dailyGoal) {
-                    els.todayStatus.textContent = `✅ GOAL MET! +$${(todayEarnings - dailyGoal).toFixed(2)} extra`;
-                    els.todayStatus.className = 'status-message status-ahead';
-                } else {
-                    const needed = dailyGoal - todayEarnings;
-                    els.todayStatus.textContent = `You need $${needed.toFixed(2)} more today`;
-                    els.todayStatus.className = 'status-message status-behind';
+            try {
+                // Guard clause - ensure data is loaded
+                if (!Array.isArray(sessions) || !Array.isArray(bills)) {
+                    console.warn('Data not loaded yet, skipping stats update');
+                    return;
                 }
-            }
 
-            if (els.totalEarned) els.totalEarned.textContent = `$${Math.round(totalEarned)}`;
-            if (els.totalNeeded) els.totalNeeded.textContent = Math.round(totalWithTax);
+                if (sessions.length === 0 && bills.length === 0) return;
 
-            if (els.sprintProgress) {
-                els.sprintProgress.style.width = Math.min(progress, 100) + '%';
-                // Change color if sprint is complete
-                if (progress >= 100) {
-                    els.sprintProgress.style.background = 'linear-gradient(90deg, #00ff88 0%, #00cc66 100%)';
-                } else {
-                    els.sprintProgress.style.background = '';
+                const today = new Date().toDateString();
+                const todaySessions = sessions.filter(s => s.timestamp && new Date(s.timestamp).toDateString() === today);
+
+                const todayHours = todaySessions.reduce((sum, s) => sum + parseFloat(s.hours || 0), 0);
+                const todayEarnings = todaySessions.filter(s => !s.is_leisure).reduce((sum, s) => sum + parseFloat(s.earnings || 0), 0);
+
+                // Calculate total earned from sessions + initial balance
+                const sessionsEarned = sessions.filter(s => !s.is_leisure).reduce((sum, s) => sum + parseFloat(s.earnings || 0), 0);
+
+                // Parse initial balance with multiple fallbacks
+                let initialBalance = 0;
+                if (userSettings && userSettings.initial_balance != null) {
+                    console.log('🔍 Initial Balance Debug:', {
+                        raw: userSettings.initial_balance,
+                        type: typeof userSettings.initial_balance,
+                        currency: userSettings.initial_balance_currency
+                    });
+                    const parsed = parseFloat(userSettings.initial_balance);
+                    initialBalance = (!isNaN(parsed) && isFinite(parsed)) ? parsed : 0;
+                    console.log('✅ Parsed initial balance:', initialBalance);
                 }
-            }
 
-            if (els.sprintProgressText) {
-                if (progress >= 100) {
-                    els.sprintProgressText.textContent = '🎉 COMPLETE!';
-                } else if (isNaN(progress) || !isFinite(progress)) {
-                    els.sprintProgressText.textContent = '0%';
-                } else {
-                    els.sprintProgressText.textContent = Math.round(progress) + '%';
+                // Convert initial balance to USD if it's in CAD
+                if (initialBalance > 0 && userSettings && userSettings.initial_balance_currency === 'CAD') {
+                    const exchangeRate = parseFloat(userSettings.exchange_rate_cad_to_usd);
+                    console.log('🔄 Converting CAD to USD:', { before: initialBalance, rate: exchangeRate });
+                    if (!isNaN(exchangeRate) && exchangeRate > 0) {
+                        initialBalance = initialBalance * exchangeRate;
+                        console.log('💱 After conversion:', initialBalance);
+                    }
                 }
-            }
 
-            if (els.remaining) {
-                if (remaining <= 0 && totalEarned > 0) {
-                    els.remaining.textContent = `+$${Math.round(totalEarned - totalWithTax)}`;
-                    els.remaining.style.color = '#00ff88';
-                } else {
-                    els.remaining.textContent = `$${Math.round(remaining)}`;
-                    els.remaining.style.color = '';
+                const totalEarned = sessionsEarned + initialBalance;
+
+                // Calculate bills based on target_bills_mode
+                const totalBillsUSD = parseFloat(TOTAL_NEEDED) || 0;
+                const totalBillsCAD = bills.filter(b => !b.paid).reduce((sum, b) => sum + parseFloat(b.amount_cad || 0), 0);
+
+                // Use tax reserve rate from settings, default to 30%
+                const taxReserveRate = userSettings ? (parseFloat(userSettings.tax_reserve_rate) || 30) : 30;
+                const afterTaxMultiplier = 1 / (1 - (taxReserveRate / 100));
+                const totalWithTax = totalBillsUSD * afterTaxMultiplier;
+
+                const remaining = Math.max(0, totalWithTax - totalEarned);
+                const daysLeft = Math.max(1, Math.ceil((DEADLINE - new Date()) / (1000 * 60 * 60 * 24)));
+                const dailyGoal = remaining / daysLeft;
+
+                const rateEl = document.getElementById('hourlyRate');
+                const defaultRate = userSettings ? (parseFloat(userSettings.default_hourly_rate) || 24) : 24;
+                const rate = rateEl ? (parseFloat(rateEl.value) || defaultRate) : defaultRate;
+                const hoursPerDay = rate > 0 ? dailyGoal / rate : 0;
+                const totalHours = rate > 0 ? remaining / rate : 0;
+
+                // Fix progress bar edge cases
+                let progress = 0;
+                if (totalWithTax > 0) {
+                    progress = Math.min((totalEarned / totalWithTax) * 100, 100);
+                } else if (totalEarned > 0) {
+                    progress = 100; // If no target but has earnings, show as complete
                 }
+
+                let todayProgress = 0;
+                if (dailyGoal > 0) {
+                    todayProgress = (todayEarnings / dailyGoal) * 100;
+                } else if (todayEarnings > 0) {
+                    todayProgress = 100; // If no daily goal but has earnings, show as complete
+                }
+
+                // Calculate tax tracking
+                const taxIncludeInitial = document.getElementById('taxIncludeInitial')?.checked || false;
+                const taxEarningsAmount = taxIncludeInitial ? totalEarned : sessionsEarned;
+                const taxReserveAmount = taxEarningsAmount * (taxReserveRate / 100);
+                const taxAfterAmount = taxEarningsAmount - taxReserveAmount;
+
+                const els = {
+                    dailyGoal: document.getElementById('dailyGoal'),
+                    todayProgress: document.getElementById('todayProgress'),
+                    todayProgressText: document.getElementById('todayProgressText'),
+                    todayStatus: document.getElementById('todayStatus'),
+                    totalEarned: document.getElementById('totalEarned'),
+                    totalNeeded: document.getElementById('totalNeeded'),
+                    sprintProgress: document.getElementById('sprintProgress'),
+                    sprintProgressText: document.getElementById('sprintProgressText'),
+                    remaining: document.getElementById('remaining'),
+                    daysLeft: document.getElementById('daysLeft'),
+                    todayHours: document.getElementById('todayHours'),
+                    todayEarnings: document.getElementById('todayEarnings'),
+                    hoursNeeded: document.getElementById('hoursNeeded'),
+                    totalHoursNeeded: document.getElementById('totalHoursNeeded'),
+                    billsTotalCAD: document.getElementById('billsTotalCAD'),
+                    billsTotalUSD: document.getElementById('billsTotalUSD'),
+                    billsWithTax: document.getElementById('billsWithTax'),
+                    billsCovered: document.getElementById('billsCovered'),
+                    taxEarnings: document.getElementById('taxEarnings'),
+                    taxReserve: document.getElementById('taxReserve'),
+                    taxAfter: document.getElementById('taxAfter'),
+                    taxRate: document.getElementById('taxRate'),
+                    taxInitialAmount: document.getElementById('taxInitialAmount')
+                };
+
+                if (els.dailyGoal) els.dailyGoal.textContent = `$${Math.round(dailyGoal)}`;
+                if (els.todayProgress) {
+                    els.todayProgress.style.width = Math.min(todayProgress, 100) + '%';
+                    els.todayProgress.classList.toggle('behind', todayProgress < 100);
+                }
+                if (els.todayProgressText) els.todayProgressText.textContent = `$${Math.round(todayEarnings)} / $${Math.round(dailyGoal)}`;
+
+                if (els.todayStatus) {
+                    if (todayEarnings >= dailyGoal) {
+                        els.todayStatus.textContent = `✅ GOAL MET! +$${(todayEarnings - dailyGoal).toFixed(2)} extra`;
+                        els.todayStatus.className = 'status-message status-ahead';
+                    } else {
+                        const needed = dailyGoal - todayEarnings;
+                        els.todayStatus.textContent = `You need $${needed.toFixed(2)} more today`;
+                        els.todayStatus.className = 'status-message status-behind';
+                    }
+                }
+
+                if (els.totalEarned) els.totalEarned.textContent = `$${Math.round(totalEarned)}`;
+                if (els.totalNeeded) els.totalNeeded.textContent = Math.round(totalWithTax);
+
+                if (els.sprintProgress) {
+                    els.sprintProgress.style.width = Math.min(progress, 100) + '%';
+                    // Change color if sprint is complete
+                    if (progress >= 100) {
+                        els.sprintProgress.style.background = 'linear-gradient(90deg, #00ff88 0%, #00cc66 100%)';
+                    } else {
+                        els.sprintProgress.style.background = '';
+                    }
+                }
+
+                if (els.sprintProgressText) {
+                    if (progress >= 100) {
+                        els.sprintProgressText.textContent = '🎉 COMPLETE!';
+                    } else if (isNaN(progress) || !isFinite(progress)) {
+                        els.sprintProgressText.textContent = '0%';
+                    } else {
+                        els.sprintProgressText.textContent = Math.round(progress) + '%';
+                    }
+                }
+
+                if (els.remaining) {
+                    if (remaining <= 0 && totalEarned > 0) {
+                        els.remaining.textContent = `+$${Math.round(totalEarned - totalWithTax)}`;
+                        els.remaining.style.color = '#00ff88';
+                    } else {
+                        els.remaining.textContent = `$${Math.round(remaining)}`;
+                        els.remaining.style.color = '';
+                    }
+                }
+
+                if (els.daysLeft) els.daysLeft.textContent = daysLeft;
+                if (els.todayHours) els.todayHours.textContent = todayHours.toFixed(1);
+                if (els.todayEarnings) els.todayEarnings.textContent = `$${Math.round(todayEarnings)}`;
+                if (els.hoursNeeded) els.hoursNeeded.textContent = hoursPerDay.toFixed(1);
+                if (els.totalHoursNeeded) els.totalHoursNeeded.textContent = Math.round(totalHours);
+
+                if (els.billsTotalCAD) els.billsTotalCAD.textContent = `$${Math.round(totalBillsCAD)}`;
+                if (els.billsTotalUSD) els.billsTotalUSD.textContent = `$${Math.round(totalBillsUSD)}`;
+                if (els.billsWithTax) els.billsWithTax.textContent = `$${Math.round(totalWithTax)}`;
+                if (els.billsCovered) els.billsCovered.textContent = `${Math.round(progress)}%`;
+
+                // Update tax tracking
+                if (els.taxEarnings) els.taxEarnings.textContent = `$${Math.round(taxEarningsAmount)}`;
+                if (els.taxReserve) els.taxReserve.textContent = `$${Math.round(taxReserveAmount)}`;
+                if (els.taxAfter) els.taxAfter.textContent = `$${Math.round(taxAfterAmount)}`;
+                if (els.taxRate) els.taxRate.textContent = `${taxReserveRate.toFixed(0)}%`;
+                if (els.taxInitialAmount) els.taxInitialAmount.textContent = Math.round(initialBalance);
+            } catch (error) {
+                console.error('Error in updateStats:', error);
+                console.error('Stack:', error.stack);
+                // Don't throw - just log and continue
             }
-
-            if (els.daysLeft) els.daysLeft.textContent = daysLeft;
-            if (els.todayHours) els.todayHours.textContent = todayHours.toFixed(1);
-            if (els.todayEarnings) els.todayEarnings.textContent = `$${Math.round(todayEarnings)}`;
-            if (els.hoursNeeded) els.hoursNeeded.textContent = hoursPerDay.toFixed(1);
-            if (els.totalHoursNeeded) els.totalHoursNeeded.textContent = Math.round(totalHours);
-
-            if (els.billsTotalCAD) els.billsTotalCAD.textContent = `$${Math.round(totalBillsCAD)}`;
-            if (els.billsTotalUSD) els.billsTotalUSD.textContent = `$${Math.round(totalBillsUSD)}`;
-            if (els.billsWithTax) els.billsWithTax.textContent = `$${Math.round(totalWithTax)}`;
-            if (els.billsCovered) els.billsCovered.textContent = `${Math.round(progress)}%`;
-
-            // Update tax tracking
-            if (els.taxEarnings) els.taxEarnings.textContent = `$${Math.round(taxEarningsAmount)}`;
-            if (els.taxReserve) els.taxReserve.textContent = `$${Math.round(taxReserveAmount)}`;
-            if (els.taxAfter) els.taxAfter.textContent = `$${Math.round(taxAfterAmount)}`;
-            if (els.taxRate) els.taxRate.textContent = `${taxReserveRate.toFixed(0)}%`;
-            if (els.taxInitialAmount) els.taxInitialAmount.textContent = Math.round(initialBalance);
         }
 
         function updateStatsDisplay(stats, todayStats) {
