@@ -21,6 +21,11 @@
                 <h1>🔥 SURVIVAL MODE 🔥</h1>
                 <div class="header-subtitle">Last Day to Work: October 24, 2025</div>
             </div>
+            <!-- DEBUG TOGGLE (Remove in production) -->
+            <button id="debugToggle" onclick="toggleDebugMode()"
+                style="padding: 8px 15px; margin-right: 10px; background: #444; border: 2px solid #666; color: #fff; border-radius: 5px; cursor: pointer; font-size: 0.9em;">
+                🐛 DEBUG: <span id="debugStatus">Detecting...</span>
+            </button>
             <button class="burger-btn" onclick="toggleBurgerMenu()">☰</button>
         </div>
 
@@ -744,8 +749,49 @@
             }
         }
 
+        // ===== EXPOSE FUNCTIONS TO GLOBAL SCOPE (for onclick handlers) =====
+        // ES6 modules are scoped, so we need to explicitly expose functions for onclick="..."
+
+        // Debug Toggle Function
+        window.toggleDebugMode = function () {
+            const currentlyDemo = !localStorage.getItem('authToken');
+            const debugStatus = document.getElementById('debugStatus');
+
+            if (currentlyDemo) {
+                // Currently in demo, switch to "logged in" mode
+                localStorage.setItem('authToken', 'DEBUG_TOKEN_12345');
+                debugStatus.textContent = 'Logged In (Fake)';
+                debugStatus.style.color = '#00ff88';
+                alert('🐛 DEBUG: Switching to "logged in" mode (fake token)\\n\\nReload the page to test.');
+                setTimeout(() => window.location.reload(), 1000);
+            } else {
+                // Currently "logged in", switch to demo
+                localStorage.removeItem('authToken');
+                debugStatus.textContent = 'Guest Mode';
+                debugStatus.style.color = '#ffaa00';
+                alert('🐛 DEBUG: Switching to guest/demo mode\\n\\nReload the page to test.');
+                setTimeout(() => window.location.reload(), 1000);
+            }
+        };
+
+        // Update debug status on load
+        function updateDebugStatus() {
+            const debugStatus = document.getElementById('debugStatus');
+            if (debugStatus) {
+                const hasToken = localStorage.getItem('authToken');
+                if (hasToken) {
+                    debugStatus.textContent = 'Logged In';
+                    debugStatus.style.color = '#00ff88';
+                } else {
+                    debugStatus.textContent = 'Guest Mode';
+                    debugStatus.style.color = '#ffaa00';
+                }
+            }
+        }
+
         // Auth Check & Initialization
         window.addEventListener('DOMContentLoaded', async () => {
+            updateDebugStatus();
             const token = localStorage.getItem('authToken');
 
             if (!token) {
@@ -2188,6 +2234,59 @@
                 closeRegisterModal();
             }
         });
+
+        // ===== EXPOSE ALL FUNCTIONS TO GLOBAL SCOPE =====
+        // Required for onclick="functionName()" to work with ES6 modules
+
+        // Menu functions
+        window.toggleBurgerMenu = toggleBurgerMenu;
+        window.closeBurgerMenu = closeBurgerMenu;
+
+        // Timer functions
+        window.startTimer = startTimer;
+        window.stopTimer = stopTimer;
+        window.resetTimer = resetTimer;
+
+        // Session functions
+        window.viewToday = viewToday;
+        window.viewAllDays = viewAllDays;
+        window.showAddSessionModal = showAddSessionModal;
+        window.closeAddSessionModal = closeAddSessionModal;
+        window.editSession = editSession;
+        window.deleteSession = deleteSession;
+        window.closeEditSessionModal = closeEditSessionModal;
+
+        // Bill functions
+        window.showAddBillModal = showAddBillModal;
+        window.closeAddBillModal = closeAddBillModal;
+        window.editBill = editBill;
+        window.toggleBillPaid = toggleBillPaid;
+        window.deleteBill = deleteBill;
+        window.closeEditBillModal = closeEditBillModal;
+
+        // Import/Export functions
+        window.exportData = exportData;
+        window.importData = importData;
+        window.exportBillsCSV = exportBillsCSV;
+        window.importBillsCSV = importBillsCSV;
+
+        // Settings functions
+        window.showSprintSettingsModal = showSprintSettingsModal;
+        window.closeSprintSettingsModal = closeSprintSettingsModal;
+
+        // Auth functions
+        window.handleLogout = handleLogout;
+        window.showLoginModal = showLoginModal;
+        window.closeLoginModal = closeLoginModal;
+        window.showRegisterModal = showRegisterModal;
+        window.closeRegisterModal = closeRegisterModal;
+        window.switchToRegister = switchToRegister;
+        window.switchToLogin = switchToLogin;
+
+        // Demo mode functions
+        window.dismissDemoBanner = dismissDemoBanner;
+
+        console.log('✅ All functions exposed to global scope');
     </script>
 </body>
 
