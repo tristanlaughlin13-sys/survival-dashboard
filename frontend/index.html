@@ -2223,6 +2223,13 @@
         // Demo mode functions
         window.dismissDemoBanner = dismissDemoBanner;
 
+        // Rendering/Update functions (needed for guest mode)
+        window.renderBills = renderBills;
+        window.renderSessions = updateSessionHistory; // Alias for clarity
+        window.updateStats = updateStats;
+        window.recalculateTarget = recalculateTarget;
+        window.updateSessionHistory = updateSessionHistory;
+
         console.log('✅ All functions exposed to global scope');
     </script>
 </body>
