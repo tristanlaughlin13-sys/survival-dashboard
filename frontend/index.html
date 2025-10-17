@@ -1087,6 +1087,35 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Tax Savings Tracker -->
+            <div class="card warning">
+                <div class="card-title">💰 TAX RESERVE TRACKING</div>
+                <div class="stats-grid four-col">
+                    <div class="stat-item">
+                        <div class="stat-value" id="taxEarnings">$0</div>
+                        <div class="stat-label">Work Earnings</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value yellow" id="taxReserve">$0</div>
+                        <div class="stat-label">Should Save</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value green" id="taxAfter">$0</div>
+                        <div class="stat-label">After Taxes</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="taxRate">30%</div>
+                        <div class="stat-label">Reserve Rate</div>
+                    </div>
+                </div>
+                <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #333;">
+                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; color: #999;">
+                        <input type="checkbox" id="taxIncludeInitial" onchange="updateStats()" style="width: auto;">
+                        <span>Include Initial Balance ($<span id="taxInitialAmount">0</span>) in tax calculation</span>
+                    </label>
+                </div>
+            </div>
         </div>
 
         <!-- Main Content: Sessions + Bills Side by Side -->
@@ -1202,6 +1231,51 @@
         </div>
     </div>
 
+    <!-- Edit Bill Modal -->
+    <div class="modal" id="editBillModal">
+        <div class="modal-content">
+            <div class="modal-header">✏️ Edit Bill</div>
+            <form onsubmit="updateBill(event)">
+                <input type="hidden" id="editBillId">
+                <div class="form-row full">
+                    <div class="input-group">
+                        <label>Bill Name</label>
+                        <input type="text" id="editBillName" placeholder="e.g., Rent, Utilities" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="input-group">
+                        <label>Amount CAD</label>
+                        <input type="number" id="editBillAmountCAD" step="0.01" min="0" placeholder="0.00" required
+                            onchange="autoCalculateEditBillUSD()">
+                    </div>
+                    <div class="input-group">
+                        <label>Amount USD</label>
+                        <input type="number" id="editBillAmountUSD" step="0.01" min="0" placeholder="0.00" required>
+                    </div>
+                </div>
+                <div class="form-row full">
+                    <div class="input-group">
+                        <label>Due Date (optional)</label>
+                        <input type="date" id="editBillDueDate">
+                    </div>
+                </div>
+                <div class="form-row full">
+                    <div class="input-group">
+                        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                            <input type="checkbox" id="editBillPaid" style="width: auto;">
+                            <span>Mark as Paid</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="submit" class="btn-modal-primary">Save Changes</button>
+                    <button type="button" class="btn-modal-secondary" onclick="closeEditBillModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Edit Session Modal -->
     <div class="modal" id="editSessionModal">
         <div class="modal-content">
@@ -1292,12 +1366,23 @@
                         <input type="number" id="targetBillsManual" step="0.01" min="0" placeholder="0.00">
                     </div>
                 </div>
-                <div class="form-row full">
+                <div class="form-row">
                     <div class="input-group">
                         <label>💰 Initial Balance (Starting Earnings)</label>
                         <input type="number" id="initialBalance" step="0.01" min="0" placeholder="0.00" required>
                         <div style="font-size: 0.8em; color: #666; margin-top: 5px;">
-                            Money you already earned before tracking started (e.g., $475.00)
+                            Money earned before tracking started
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Currency</label>
+                        <select id="initialBalanceCurrency"
+                            style="padding: 10px; background: #2a2a2a; color: #fff; border: 2px solid #333; border-radius: 8px; font-size: 1em;">
+                            <option value="USD">USD ($)</option>
+                            <option value="CAD">CAD ($)</option>
+                        </select>
+                        <div style="font-size: 0.8em; color: #666; margin-top: 5px;">
+                            Will auto-convert to USD
                         </div>
                     </div>
                 </div>
@@ -1374,13 +1459,15 @@
 
         // Load All Dashboard Data
         async function loadDashboardData() {
-            // Load settings first, then use them for calculations
+            // Load settings and data, then recalculate target
             await loadSettings();
             await Promise.all([
                 loadSessions(),
                 loadBills(),
                 loadStats()
             ]);
+            // Recalculate target AFTER bills are loaded
+            recalculateTarget();
         }
 
         async function loadSettings() {
@@ -1406,18 +1493,22 @@
                 if (countdownLabel) {
                     countdownLabel.textContent = `Until ${deadlineStr} Work Deadline`;
                 }
-
-                // Calculate TOTAL_NEEDED based on settings
-                if (userSettings.target_bills_mode === 'manual') {
-                    TOTAL_NEEDED = userSettings.target_bills_manual;
-                } else if (userSettings.target_bills_mode === 'auto_all') {
-                    TOTAL_NEEDED = bills.reduce((sum, bill) => sum + parseFloat(bill.amount_usd), 0);
-                } else { // auto_unpaid (default)
-                    TOTAL_NEEDED = bills.filter(b => !b.paid).reduce((sum, bill) => sum + parseFloat(bill.amount_usd), 0);
-                }
             } catch (error) {
                 console.error('Error loading settings:', error);
                 // Use defaults if settings fail to load
+            }
+        }
+
+        function recalculateTarget() {
+            if (!userSettings) return;
+
+            // Calculate TOTAL_NEEDED based on settings (AFTER bills are loaded)
+            if (userSettings.target_bills_mode === 'manual') {
+                TOTAL_NEEDED = userSettings.target_bills_manual || 0;
+            } else if (userSettings.target_bills_mode === 'auto_all') {
+                TOTAL_NEEDED = bills.reduce((sum, bill) => sum + parseFloat(bill.amount_usd || 0), 0);
+            } else { // auto_unpaid (default)
+                TOTAL_NEEDED = bills.filter(b => !b.paid).reduce((sum, bill) => sum + parseFloat(bill.amount_usd || 0), 0);
             }
         }
 
@@ -1630,7 +1721,8 @@
                             <span class="bill-amount-usd">~$${Math.round(parseFloat(bill.amount_usd))} USD</span>
                         </div>
                         <div class="session-actions">
-                            <button class="action-btn" onclick="toggleBillPaid(${bill.id}, ${!bill.paid})">${bill.paid ? 'Unpaid' : 'Paid'}</button>
+                            <button class="action-btn" onclick="editBill(${bill.id})">✏️</button>
+                            <button class="action-btn" onclick="toggleBillPaid(${bill.id}, ${!bill.paid})">${bill.paid ? '❌' : '✅'}</button>
                             <button class="action-btn delete" onclick="deleteBill(${bill.id})">🗑️</button>
                         </div>
                     </div>
@@ -1638,8 +1730,9 @@
             }).join('');
 
             const totalUnpaidCAD = sortedBills.filter(b => !b.paid).reduce((sum, b) => sum + parseFloat(b.amount_cad), 0);
+            const totalUnpaidUSD = sortedBills.filter(b => !b.paid).reduce((sum, b) => sum + parseFloat(b.amount_usd), 0);
             const billsTotalEl = document.getElementById('billsTotal');
-            if (billsTotalEl) billsTotalEl.textContent = `$${totalUnpaidCAD.toFixed(2)}`;
+            if (billsTotalEl) billsTotalEl.textContent = `$${totalUnpaidCAD.toFixed(2)} CAD (~$${totalUnpaidUSD.toFixed(2)} USD)`;
         }
 
         // Update Session History
@@ -1758,7 +1851,14 @@
 
             // Calculate total earned from sessions + initial balance
             const sessionsEarned = sessions.filter(s => !s.is_leisure).reduce((sum, s) => sum + parseFloat(s.earnings), 0);
-            const initialBalance = userSettings ? (userSettings.initial_balance || 0) : 0;
+            let initialBalance = userSettings ? (userSettings.initial_balance || 0) : 0;
+
+            // Convert initial balance to USD if it's in CAD
+            if (userSettings && userSettings.initial_balance_currency === 'CAD') {
+                const exchangeRate = userSettings.exchange_rate_cad_to_usd || 0.7143;
+                initialBalance = initialBalance * exchangeRate;
+            }
+
             const totalEarned = sessionsEarned + initialBalance;
 
             // Calculate bills based on target_bills_mode
@@ -1795,6 +1895,12 @@
                 todayProgress = 100; // If no daily goal but has earnings, show as complete
             }
 
+            // Calculate tax tracking
+            const taxIncludeInitial = document.getElementById('taxIncludeInitial')?.checked || false;
+            const taxEarningsAmount = taxIncludeInitial ? totalEarned : sessionsEarned;
+            const taxReserveAmount = taxEarningsAmount * (taxReserveRate / 100);
+            const taxAfterAmount = taxEarningsAmount - taxReserveAmount;
+
             const els = {
                 dailyGoal: document.getElementById('dailyGoal'),
                 todayProgress: document.getElementById('todayProgress'),
@@ -1813,7 +1919,12 @@
                 billsTotalCAD: document.getElementById('billsTotalCAD'),
                 billsTotalUSD: document.getElementById('billsTotalUSD'),
                 billsWithTax: document.getElementById('billsWithTax'),
-                billsCovered: document.getElementById('billsCovered')
+                billsCovered: document.getElementById('billsCovered'),
+                taxEarnings: document.getElementById('taxEarnings'),
+                taxReserve: document.getElementById('taxReserve'),
+                taxAfter: document.getElementById('taxAfter'),
+                taxRate: document.getElementById('taxRate'),
+                taxInitialAmount: document.getElementById('taxInitialAmount')
             };
 
             if (els.dailyGoal) els.dailyGoal.textContent = `$${Math.round(dailyGoal)}`;
@@ -1877,6 +1988,13 @@
             if (els.billsTotalUSD) els.billsTotalUSD.textContent = `$${Math.round(totalBillsUSD)}`;
             if (els.billsWithTax) els.billsWithTax.textContent = `$${Math.round(totalWithTax)}`;
             if (els.billsCovered) els.billsCovered.textContent = `${Math.round(progress)}%`;
+
+            // Update tax tracking
+            if (els.taxEarnings) els.taxEarnings.textContent = `$${Math.round(taxEarningsAmount)}`;
+            if (els.taxReserve) els.taxReserve.textContent = `$${Math.round(taxReserveAmount)}`;
+            if (els.taxAfter) els.taxAfter.textContent = `$${Math.round(taxAfterAmount)}`;
+            if (els.taxRate) els.taxRate.textContent = `${taxReserveRate.toFixed(0)}%`;
+            if (els.taxInitialAmount) els.taxInitialAmount.textContent = Math.round(initialBalance);
         }
 
         function updateStatsDisplay(stats, todayStats) {
@@ -1993,6 +2111,7 @@
                 document.getElementById('targetBillsMode').value = settings.target_bills_mode || 'auto_unpaid';
                 document.getElementById('targetBillsManual').value = settings.target_bills_manual || 0;
                 document.getElementById('initialBalance').value = settings.initial_balance || 0;
+                document.getElementById('initialBalanceCurrency').value = settings.initial_balance_currency || 'USD';
                 document.getElementById('defaultHourlyRate').value = settings.default_hourly_rate || 55;
                 document.getElementById('taxReserveRate').value = settings.tax_reserve_rate || 30;
                 document.getElementById('exchangeRate').value = settings.exchange_rate_cad_to_usd || 0.7143;
@@ -2022,6 +2141,7 @@
                 target_bills_mode: document.getElementById('targetBillsMode').value,
                 target_bills_manual: parseFloat(document.getElementById('targetBillsManual').value) || 0,
                 initial_balance: parseFloat(document.getElementById('initialBalance').value) || 0,
+                initial_balance_currency: document.getElementById('initialBalanceCurrency').value,
                 default_hourly_rate: parseFloat(document.getElementById('defaultHourlyRate').value),
                 tax_reserve_rate: parseFloat(document.getElementById('taxReserveRate').value),
                 exchange_rate_cad_to_usd: parseFloat(document.getElementById('exchangeRate').value)
@@ -2160,6 +2280,70 @@
             } catch (error) {
                 alert('Error deleting session: ' + error.message);
             }
+        }
+
+        // Edit Bill
+        function showEditBillModal(bill) {
+            document.getElementById('editBillId').value = bill.id;
+            document.getElementById('editBillName').value = bill.name;
+            document.getElementById('editBillAmountCAD').value = bill.amount_cad;
+            document.getElementById('editBillAmountUSD').value = bill.amount_usd;
+            document.getElementById('editBillDueDate').value = bill.due_date || '';
+            document.getElementById('editBillPaid').checked = bill.paid || false;
+
+            document.getElementById('editBillModal').classList.add('show');
+        }
+
+        function closeEditBillModal() {
+            document.getElementById('editBillModal').classList.remove('show');
+        }
+
+        function autoCalculateEditBillUSD() {
+            const cadInput = document.getElementById('editBillAmountCAD');
+            const usdInput = document.getElementById('editBillAmountUSD');
+            const exchangeRate = userSettings ? userSettings.exchange_rate_cad_to_usd : 0.7143;
+
+            if (cadInput && usdInput && cadInput.value) {
+                const cad = parseFloat(cadInput.value);
+                const usd = (cad * exchangeRate).toFixed(2);
+                usdInput.value = usd;
+            }
+        }
+
+        async function updateBill(event) {
+            event.preventDefault();
+
+            const billId = document.getElementById('editBillId').value;
+            const updates = {
+                name: document.getElementById('editBillName').value,
+                amount_cad: parseFloat(document.getElementById('editBillAmountCAD').value),
+                amount_usd: parseFloat(document.getElementById('editBillAmountUSD').value),
+                due_date: document.getElementById('editBillDueDate').value || null
+            };
+
+            try {
+                await window.api.updateBill(billId, updates);
+
+                // Also update paid status if changed
+                const paid = document.getElementById('editBillPaid').checked;
+                const originalBill = bills.find(b => b.id == billId);
+                if (originalBill && originalBill.paid !== paid) {
+                    await window.api.markBillPaid(billId, paid);
+                }
+
+                await loadDashboardData();
+                closeEditBillModal();
+                alert('✅ Bill updated successfully!');
+            } catch (error) {
+                alert('❌ Error updating bill: ' + error.message);
+            }
+        }
+
+        function editBill(id) {
+            const bill = bills.find(b => b.id === id);
+            if (!bill) return;
+
+            showEditBillModal(bill);
         }
 
         // Toggle Bill Paid
@@ -2406,6 +2590,10 @@
             if (e.target.id === 'editSessionModal') closeEditSessionModal();
         });
 
+        document.getElementById('editBillModal').addEventListener('click', (e) => {
+            if (e.target.id === 'editBillModal') closeEditBillModal();
+        });
+
         document.getElementById('sprintSettingsModal').addEventListener('click', (e) => {
             if (e.target.id === 'sprintSettingsModal') closeSprintSettingsModal();
         });
@@ -2417,6 +2605,7 @@
                 closeAddSessionModal();
                 closeAddBillModal();
                 closeEditSessionModal();
+                closeEditBillModal();
                 closeSprintSettingsModal();
             }
         });

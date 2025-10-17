@@ -7,7 +7,7 @@ Usage: python userinput.py
 
 user_input = input("Enter your instructions: ")
 print("\n" + "="*50)
-print("USER INPUT: Do you need me to go and run the extras you added in database-setup.sql? because i havent setup psql locally to be able to run that and i think i probably need to go do it piecewise in dbeaver to make sure it gets done properly and without errors before this will work properly.")
+print("USER INPUT: One thing ive just noticed is that the initial balance isnt specified which currency it is in. I should be able to select which one and it should convert automatically so there are no mix ups. ")
 print("="*50)
 print(user_input)
 print("="*50)
