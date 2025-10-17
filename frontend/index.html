@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Survival Dashboard - Oct 16-24</title>
+    <title>Survival Mode - Dashboard</title>
     <style>
         * {
             margin: 0;
@@ -12,10 +12,11 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #0a0a0a;
+            color: #fff;
             padding: 20px;
+            min-height: 100vh;
         }
 
         .container {
@@ -23,235 +24,454 @@
             margin: 0 auto;
         }
 
+        /* Header with Burger Menu */
         .header {
-            background: white;
-            padding: 20px 30px;
-            border-radius: 15px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            margin-bottom: 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            flex-wrap: wrap;
-            gap: 15px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #ff3333;
+        }
+
+        .header-title {
+            flex: 1;
         }
 
         .header h1 {
-            color: #333;
-            font-size: 28px;
+            font-size: 2.5em;
+            color: #ff3333;
+            margin-bottom: 5px;
         }
 
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 15px;
+        .header-subtitle {
+            color: #999;
+            font-size: 1em;
         }
 
-        .welcome-text {
-            color: #666;
-            font-size: 14px;
-        }
-
-        .logout-btn {
-            padding: 8px 20px;
-            background: #dc3545;
-            color: white;
-            border: none;
+        .burger-btn {
+            background: #1a1a1a;
+            border: 2px solid #333;
+            color: #fff;
+            font-size: 1.5em;
+            padding: 10px 15px;
             border-radius: 8px;
             cursor: pointer;
-            font-size: 14px;
-            transition: background 0.3s;
+            transition: all 0.2s;
         }
 
-        .logout-btn:hover {
-            background: #c82333;
+        .burger-btn:hover {
+            border-color: #ff3333;
+            background: #2a2a2a;
         }
 
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
+        /* Burger Menu */
+        .burger-menu {
+            position: fixed;
+            top: 0;
+            right: -300px;
+            width: 280px;
+            height: 100vh;
+            background: #1a1a1a;
+            border-left: 2px solid #ff3333;
+            z-index: 1001;
+            padding: 20px;
+            transition: right 0.3s ease;
+        }
+
+        .burger-menu.open {
+            right: 0;
+        }
+
+        .burger-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            display: none;
+        }
+
+        .burger-overlay.show {
+            display: block;
+        }
+
+        .burger-menu-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #333;
         }
 
-        .stat-card {
-            background: white;
-            padding: 25px;
-            border-radius: 15px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-5px);
-        }
-
-        .stat-label {
-            color: #666;
-            font-size: 14px;
-            margin-bottom: 10px;
-        }
-
-        .stat-value {
-            color: #333;
-            font-size: 32px;
+        .burger-menu-title {
+            font-size: 1.2em;
             font-weight: bold;
         }
 
-        .stat-value.positive {
-            color: #28a745;
+        .burger-close {
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 1.5em;
+            cursor: pointer;
+            padding: 5px;
         }
 
-        .stat-value.negative {
-            color: #dc3545;
+        .burger-menu-item {
+            padding: 15px;
+            margin-bottom: 10px;
+            background: #2a2a2a;
+            border: 2px solid #333;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1em;
         }
 
+        .burger-menu-item:hover {
+            border-color: #00ff88;
+            background: #3a3a3a;
+        }
+
+        .burger-menu-item.logout {
+            border-color: #ff3333;
+            color: #ff3333;
+        }
+
+        .burger-menu-item.logout:hover {
+            background: rgba(255, 51, 51, 0.1);
+        }
+
+        /* Countdown Banner */
+        .deadline-countdown {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2a0a0a 100%);
+            border: 3px solid #ff3333;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .countdown-timer {
+            font-size: 4em;
+            font-weight: bold;
+            color: #ff3333;
+            font-variant-numeric: tabular-nums;
+            margin-bottom: 10px;
+        }
+
+        .countdown-label {
+            font-size: 1.2em;
+            color: #999;
+        }
+
+        /* Hero Dashboard Grid */
+        .hero-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        /* Stats Row */
+        .stats-row {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        /* Main Content - Side by Side */
+        .main-content {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: #1a1a1a;
+            border: 2px solid #333;
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        .card.critical {
+            border-color: #ff3333;
+        }
+
+        .card.warning {
+            border-color: #ffaa00;
+        }
+
+        .card.success {
+            border-color: #00ff88;
+        }
+
+        .card-title {
+            font-size: 1.3em;
+            margin-bottom: 15px;
+            color: #fff;
+            font-weight: bold;
+        }
+
+        .big-number {
+            font-size: 3em;
+            font-weight: bold;
+            margin: 10px 0;
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* Progress Bars */
         .progress-bar {
             width: 100%;
-            height: 20px;
-            background: #e9ecef;
-            border-radius: 10px;
+            height: 30px;
+            background: #2a2a2a;
+            border-radius: 15px;
             overflow: hidden;
-            margin-top: 15px;
+            margin: 12px 0;
+            position: relative;
         }
 
         .progress-fill {
             height: 100%;
-            background: linear-gradient(90deg, #28a745, #20c997);
+            background: linear-gradient(90deg, #00ff88 0%, #00cc66 100%);
             transition: width 0.5s ease;
-            display: flex;
-            align-items: center;
-            justify-content: flex-end;
-            padding-right: 10px;
-            color: white;
-            font-size: 12px;
-            font-weight: bold;
-        }
-
-        .main-content {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 20px;
-            margin-bottom: 20px;
-        }
-
-        @media (max-width: 1024px) {
-            .main-content {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .card {
-            background: white;
-            padding: 30px;
             border-radius: 15px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
 
-        .card h2 {
-            color: #333;
-            margin-bottom: 20px;
-            font-size: 22px;
+        .progress-fill.behind {
+            background: linear-gradient(90deg, #ff3333 0%, #cc0000 100%);
         }
 
-        .timer-display {
-            font-size: 64px;
+        .progress-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
             font-weight: bold;
-            color: #667eea;
+            color: #fff;
+            text-shadow: 0 0 5px rgba(0,0,0,0.8);
+            font-size: 0.9em;
+        }
+
+        /* Timer Controls */
+        .timer-display {
+            font-size: 3em;
+            font-weight: bold;
+            color: #fff;
             text-align: center;
-            margin: 30px 0;
+            margin: 20px 0;
             font-family: 'Courier New', monospace;
+            font-variant-numeric: tabular-nums;
         }
 
         .timer-controls {
             display: flex;
             gap: 10px;
-            justify-content: center;
-            margin-bottom: 30px;
+            margin: 15px 0;
         }
 
         .btn {
-            padding: 12px 30px;
+            flex: 1;
+            padding: 12px 20px;
+            font-size: 1em;
+            font-weight: bold;
             border: none;
             border-radius: 8px;
             cursor: pointer;
-            font-size: 16px;
-            font-weight: 600;
-            transition: all 0.3s;
+            transition: all 0.2s;
         }
 
-        .btn-primary {
-            background: linear-gradient(135deg, #28a745, #20c997);
-            color: white;
+        .btn-start {
+            background: #00ff88;
+            color: #000;
         }
 
-        .btn-primary:hover {
+        .btn-start:hover {
+            background: #00cc66;
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
         }
 
-        .btn-danger {
-            background: #dc3545;
-            color: white;
+        .btn-stop {
+            background: #ff3333;
+            color: #fff;
         }
 
-        .btn-danger:hover {
-            background: #c82333;
+        .btn-stop:hover {
+            background: #cc0000;
         }
 
-        .btn-secondary {
-            background: #6c757d;
-            color: white;
+        .btn-reset {
+            background: #ffaa00;
+            color: #000;
         }
 
-        .btn-secondary:hover {
-            background: #5a6268;
+        .btn-reset:hover {
+            background: #cc8800;
         }
 
-        .form-group {
-            margin-bottom: 20px;
+        /* Input Groups */
+        .input-group {
+            margin: 12px 0;
         }
 
-        .form-group label {
+        .input-group label {
             display: block;
-            margin-bottom: 8px;
-            color: #333;
-            font-weight: 500;
+            margin-bottom: 6px;
+            color: #999;
+            font-size: 0.9em;
         }
 
-        .form-group input,
-        .form-group textarea {
+        .input-group input {
             width: 100%;
             padding: 10px;
-            border: 2px solid #e0e0e0;
+            font-size: 1em;
+            background: #2a2a2a;
+            border: 2px solid #444;
             border-radius: 8px;
-            font-size: 14px;
+            color: #fff;
         }
 
-        .form-group input:focus,
-        .form-group textarea:focus {
+        .input-group input:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: #00ff88;
         }
 
-        .sessions-list {
-            max-height: 400px;
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-top: 15px;
+        }
+
+        .stats-grid.four-col {
+            grid-template-columns: repeat(4, 1fr);
+        }
+
+        .stat-item {
+            background: #2a2a2a;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #00ff88;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .stat-value.red {
+            color: #ff3333;
+        }
+
+        .stat-value.yellow {
+            color: #ffaa00;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            color: #999;
+            margin-top: 5px;
+        }
+
+        /* Status Messages */
+        .status-message {
+            padding: 12px;
+            border-radius: 8px;
+            margin: 12px 0;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .status-behind {
+            background: rgba(255, 51, 51, 0.2);
+            border: 2px solid #ff3333;
+            color: #ff3333;
+        }
+
+        .status-ahead {
+            background: rgba(0, 255, 136, 0.2);
+            border: 2px solid #00ff88;
+            color: #00ff88;
+        }
+
+        /* Session History */
+        .session-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .session-controls input[type="date"] {
+            flex: 1;
+            min-width: 150px;
+            padding: 8px;
+            background: #2a2a2a;
+            border: 2px solid #444;
+            border-radius: 8px;
+            color: #fff;
+        }
+
+        .btn-small {
+            padding: 8px 15px;
+            font-size: 0.9em;
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-small.primary {
+            background: #00ff88;
+            color: #000;
+        }
+
+        .btn-small.secondary {
+            background: #444;
+            color: #fff;
+        }
+
+        .btn-small:hover {
+            transform: translateY(-1px);
+        }
+
+        .session-history {
+            max-height: 500px;
             overflow-y: auto;
         }
 
         .session-item {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 8px;
+            background: #2a2a2a;
+            padding: 12px;
             margin-bottom: 10px;
+            border-radius: 8px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            transition: background 0.3s;
+            transition: background 0.2s;
         }
 
         .session-item:hover {
-            background: #e9ecef;
+            background: #3a3a3a;
+        }
+
+        .session-item.leisure {
+            background: rgba(255, 51, 51, 0.05);
+            border-left: 3px solid #ff3333;
         }
 
         .session-info {
@@ -260,102 +480,210 @@
 
         .session-time {
             font-weight: bold;
-            color: #333;
-            margin-bottom: 5px;
+            margin-bottom: 3px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .session-details {
-            font-size: 13px;
+            font-size: 0.9em;
+            color: #999;
+        }
+
+        .session-note {
+            font-size: 0.85em;
             color: #666;
+            margin-top: 5px;
+            font-style: italic;
         }
 
         .session-earnings {
-            font-size: 20px;
+            font-size: 1.3em;
             font-weight: bold;
-            color: #28a745;
+            color: #00ff88;
             margin: 0 15px;
+            font-variant-numeric: tabular-nums;
         }
 
-        .delete-btn {
-            padding: 8px 15px;
-            background: #dc3545;
-            color: white;
-            border: none;
+        .session-earnings.negative {
+            color: #ff3333;
+        }
+
+        .session-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            padding: 6px 10px;
+            background: #2a2a2a;
+            border: 1px solid #444;
+            color: #fff;
             border-radius: 5px;
             cursor: pointer;
-            font-size: 12px;
+            font-size: 0.9em;
+            transition: all 0.2s;
         }
 
-        .delete-btn:hover {
-            background: #c82333;
+        .action-btn:hover {
+            background: #3a3a3a;
+            border-color: #00ff88;
+        }
+
+        .action-btn.delete {
+            border-color: #ff3333;
+            color: #ff3333;
+        }
+
+        .action-btn.delete:hover {
+            background: rgba(255, 51, 51, 0.1);
+        }
+
+        /* Bills Conveyor */
+        .bills-track {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 400px;
+            overflow-y: auto;
+            margin-bottom: 15px;
         }
 
         .bill-item {
-            background: #f8f9fa;
+            background: linear-gradient(135deg, #2a0a0a 0%, #1a1a1a 100%);
+            border-left: 5px solid #ff3333;
             padding: 15px;
             border-radius: 8px;
-            margin-bottom: 10px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            animation: slideIn 0.5s ease-out;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .bill-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,51,51,0.1), transparent);
+            animation: shimmer 3s infinite;
+        }
+
+        .bill-item.urgent {
+            border-left-color: #ff0000;
+            background: linear-gradient(135deg, #3a0000 0%, #2a0000 100%);
+            animation: pulse 2s infinite, slideIn 0.5s ease-out;
+        }
+
+        .bill-item.warning {
+            border-left-color: #ffaa00;
+            background: linear-gradient(135deg, #2a1a00 0%, #1a1a1a 100%);
         }
 
         .bill-item.paid {
-            background: #d4edda;
-            border-left: 4px solid #28a745;
+            border-left-color: #00ff88;
+            background: linear-gradient(135deg, #0a2a1a 0%, #1a1a1a 100%);
+            opacity: 0.6;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.7);
+            }
+            50% {
+                box-shadow: 0 0 20px 5px rgba(255, 0, 0, 0);
+            }
+        }
+
+        @keyframes shimmer {
+            0% { width: 0; left: 0; }
+            50% { width: 100%; left: 0; }
+            100% { width: 0; left: 100%; }
         }
 
         .bill-info {
             flex: 1;
+            position: relative;
+            z-index: 1;
         }
 
         .bill-name {
+            font-size: 1.1em;
             font-weight: bold;
-            color: #333;
             margin-bottom: 5px;
         }
 
-        .bill-amount {
-            font-size: 18px;
-            font-weight: bold;
-            color: #dc3545;
-            margin: 0 15px;
+        .bill-due {
+            font-size: 0.9em;
+            color: #999;
         }
 
-        .bill-item.paid .bill-amount {
-            color: #28a745;
+        .bill-due.urgent {
+            color: #ff3333;
+            font-weight: bold;
+        }
+
+        .bill-amount {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #ff3333;
+            text-align: right;
+            position: relative;
+            z-index: 1;
+            margin: 0 15px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .bill-amount.paid {
+            color: #00ff88;
             text-decoration: line-through;
         }
 
-        .bill-actions {
-            display: flex;
-            gap: 10px;
+        .bill-amount-usd {
+            font-size: 0.6em;
+            color: #999;
+            display: block;
         }
 
-        .checkbox-btn {
-            padding: 8px 15px;
-            background: #28a745;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 12px;
+        .bills-total {
+            margin-top: 15px;
+            padding: 15px;
+            background: #2a0a0a;
+            border-radius: 8px;
+            text-align: center;
+            border: 2px solid #ff3333;
         }
 
-        .checkbox-btn:hover {
-            background: #218838;
+        .bills-total-label {
+            font-size: 1em;
+            color: #999;
+            margin-bottom: 8px;
         }
 
-        .bill-item.paid .checkbox-btn {
-            background: #6c757d;
+        .bills-total-amount {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #ff3333;
+            font-variant-numeric: tabular-nums;
         }
 
-        .add-bill-form {
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 2px solid #e9ecef;
-        }
-
+        /* Modal */
         .modal {
             display: none;
             position: fixed;
@@ -363,10 +691,11 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 2000;
             justify-content: center;
             align-items: center;
-            z-index: 1000;
+            padding: 20px;
         }
 
         .modal.show {
@@ -374,24 +703,123 @@
         }
 
         .modal-content {
-            background: white;
-            padding: 30px;
+            background: #1a1a1a;
+            border: 2px solid #333;
             border-radius: 15px;
+            padding: 30px;
             max-width: 500px;
-            width: 90%;
+            width: 100%;
             max-height: 90vh;
             overflow-y: auto;
+            animation: modalSlideIn 0.3s ease-out;
         }
 
+        @keyframes modalSlideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #00ff88;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .form-row.full {
+            grid-template-columns: 1fr;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn-modal-primary {
+            flex: 1;
+            padding: 12px;
+            background: #00ff88;
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-modal-primary:hover {
+            background: #00cc66;
+            transform: translateY(-2px);
+        }
+
+        .btn-modal-secondary {
+            flex: 1;
+            padding: 12px;
+            background: #444;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-modal-secondary:hover {
+            background: #555;
+        }
+
+        /* Empty States */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #666;
+        }
+
+        .empty-state-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+        }
+
+        /* Date Group Headers */
+        .date-group-header {
+            background: #2a2a2a;
+            padding: 10px 15px;
+            border-radius: 5px;
+            margin: 20px 0 10px 0;
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+            color: #00ff88;
+        }
+
+        .date-group-stats {
+            color: #999;
+        }
+
+        /* Loading State */
         .loading {
             text-align: center;
-            padding: 20px;
+            padding: 40px;
             color: #666;
         }
 
         .spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #667eea;
+            border: 4px solid #2a2a2a;
+            border-top: 4px solid #00ff88;
             border-radius: 50%;
             width: 40px;
             height: 40px;
@@ -404,81 +832,241 @@
             100% { transform: rotate(360deg); }
         }
 
-        .empty-state {
-            text-align: center;
-            padding: 40px 20px;
-            color: #999;
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .hero-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-grid.four-col {
+                grid-template-columns: repeat(2, 1fr);
+            }
         }
 
-        .empty-state-icon {
-            font-size: 48px;
-            margin-bottom: 15px;
+        @media (max-width: 768px) {
+            .countdown-timer {
+                font-size: 2.5em;
+            }
+            
+            .big-number {
+                font-size: 2em;
+            }
+            
+            .header h1 {
+                font-size: 1.8em;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
         }
 
-        .leisure-badge {
-            background: #ff6b6b;
-            color: white;
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #1a1a1a;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #444;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        /* Badge */
+        .badge {
+            display: inline-block;
             padding: 2px 8px;
             border-radius: 4px;
-            font-size: 11px;
+            font-size: 0.75em;
+            font-weight: bold;
             margin-left: 8px;
         }
 
-        .export-btn {
-            margin-top: 20px;
-            width: 100%;
+        .badge.manual {
+            background: #444;
+            color: #999;
+        }
+
+        .badge.leisure {
+            background: #ff3333;
+            color: #fff;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- Header -->
+        <!-- Header with Burger Menu -->
         <div class="header">
-            <h1>🎯 Survival Dashboard</h1>
-            <div class="user-info">
-                <span class="welcome-text" id="welcomeText">Loading...</span>
-                <button class="logout-btn" onclick="handleLogout()">Logout</button>
+            <div class="header-title">
+                <h1>🔥 SURVIVAL MODE 🔥</h1>
+                <div class="header-subtitle">Last Day to Work: October 24, 2025</div>
             </div>
+            <button class="burger-btn" onclick="toggleBurgerMenu()">☰</button>
         </div>
 
-        <!-- Stats Grid -->
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-label">Total Earned (USD)</div>
-                <div class="stat-value positive" id="totalEarned">$0.00</div>
+        <!-- Burger Menu Overlay -->
+        <div class="burger-overlay" id="burgerOverlay" onclick="closeBurgerMenu()"></div>
+
+        <!-- Burger Menu -->
+        <div class="burger-menu" id="burgerMenu">
+            <div class="burger-menu-header">
+                <div class="burger-menu-title">Menu</div>
+                <button class="burger-close" onclick="closeBurgerMenu()">✕</button>
+            </div>
+            <div class="burger-menu-item" onclick="exportData()">
+                📥 Export Data
+            </div>
+            <div class="burger-menu-item" onclick="importData()">
+                📤 Import Data
+            </div>
+            <div class="burger-menu-item logout" onclick="handleLogout()">
+                🚪 Logout
+            </div>
+        </div>
+        <input type="file" id="importFile" accept=".json" style="display: none;" onchange="handleImport(event)">
+
+        <!-- Countdown Banner -->
+        <div class="deadline-countdown">
+            <div class="countdown-timer" id="countdown">--:--:--</div>
+            <div class="countdown-label">Until Oct 24 Work Deadline</div>
+        </div>
+
+        <!-- Hero Dashboard Grid -->
+        <div class="hero-grid">
+            <!-- Today's Goal -->
+            <div class="card critical">
+                <div class="card-title">💰 TODAY'S GOAL</div>
+                <div class="big-number" id="dailyGoal">$0</div>
                 <div class="progress-bar">
-                    <div class="progress-fill" id="progressBar" style="width: 0%">0%</div>
+                    <div class="progress-fill" id="todayProgress" style="width: 0%"></div>
+                    <div class="progress-text" id="todayProgressText">$0 / $0</div>
+                </div>
+                <div id="todayStatus" class="status-message status-behind">
+                    Loading...
                 </div>
             </div>
-            <div class="stat-card">
-                <div class="stat-label">Target Goal (USD)</div>
-                <div class="stat-value" id="totalTarget">$0.00</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Remaining</div>
-                <div class="stat-value negative" id="remaining">$0.00</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Daily Goal</div>
-                <div class="stat-value" id="dailyGoal">$0.00</div>
-                <div class="stat-label" style="margin-top: 10px; font-size: 12px;" id="daysLeft">0 days left</div>
-            </div>
-        </div>
 
-        <!-- Main Content -->
-        <div class="main-content">
-            <!-- Timer and Sessions -->
+            <!-- Work Timer -->
             <div class="card">
-                <h2>⏱️ Work Timer</h2>
+                <div class="card-title">⏱️ WORK TIMER</div>
                 <div class="timer-display" id="timerDisplay">00:00:00</div>
                 <div class="timer-controls">
-                    <button class="btn btn-primary" id="startBtn" onclick="startTimer()">Start Timer</button>
-                    <button class="btn btn-danger" id="stopBtn" onclick="stopTimer()" style="display: none;">Stop & Save</button>
-                    <button class="btn btn-secondary" onclick="showManualEntryModal()">Manual Entry</button>
+                    <button class="btn btn-start" id="startBtn" onclick="startTimer()">START</button>
+                    <button class="btn btn-stop" id="stopBtn" onclick="stopTimer()" style="display:none">STOP</button>
+                    <button class="btn btn-reset" id="resetBtn" onclick="resetTimer()">RESET</button>
                 </div>
+                <div class="input-group">
+                    <label>Hourly Rate ($)</label>
+                    <input type="number" id="hourlyRate" value="24" min="0" max="100" step="0.5">
+                    <div style="font-size: 0.8em; color: #666; margin-top: 5px;">
+                        Set to $0 for leisure/break time
+                    </div>
+                </div>
+                <div class="stat-item" style="margin-top: 15px;">
+                    <div class="stat-value" id="currentSessionEarnings">$0.00</div>
+                    <div class="stat-label">Current Session</div>
+                </div>
+            </div>
 
-                <h3 style="margin-top: 40px; margin-bottom: 15px; color: #333;">📅 Recent Sessions</h3>
-                <div class="sessions-list" id="sessionsList">
+            <!-- 9-Day Sprint -->
+            <div class="card warning">
+                <div class="card-title">📊 9-DAY SPRINT</div>
+                <div class="big-number" id="totalEarned">$0</div>
+                <div style="font-size: 0.9em; color: #999;">of $<span id="totalNeeded">0</span> needed</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="sprintProgress" style="width: 0%"></div>
+                    <div class="progress-text" id="sprintProgressText">0%</div>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-value" id="daysLeft">0</div>
+                        <div class="stat-label">Days Left</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value red" id="remaining">$0</div>
+                        <div class="stat-label">To Earn</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Row -->
+        <div class="stats-row">
+            <!-- Quick Stats -->
+            <div class="card">
+                <div class="card-title">📈 QUICK STATS</div>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-value" id="todayHours">0.0</div>
+                        <div class="stat-label">Hours Today</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="todayEarnings">$0</div>
+                        <div class="stat-label">Earned Today</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="hoursNeeded">0.0</div>
+                        <div class="stat-label">Hrs/Day Needed</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="totalHoursNeeded">0</div>
+                        <div class="stat-label">Total Hrs Left</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bills Breakdown -->
+            <div class="card critical">
+                <div class="card-title">💸 BILLS BREAKDOWN (CAD → USD)</div>
+                <div class="stats-grid four-col">
+                    <div class="stat-item">
+                        <div class="stat-value red" id="billsTotalCAD">$0</div>
+                        <div class="stat-label">Total CAD</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value yellow" id="billsTotalUSD">$0</div>
+                        <div class="stat-label">Total USD (~1.4)</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value red" id="billsWithTax">$0</div>
+                        <div class="stat-label">USD + Tax (33%)</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="billsCovered">0%</div>
+                        <div class="stat-label">Covered</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content: Sessions + Bills Side by Side -->
+        <div class="main-content">
+            <!-- Session History -->
+            <div class="card">
+                <div class="card-title">📝 SESSION HISTORY</div>
+                <div class="session-controls">
+                    <input type="date" id="viewDate">
+                    <button class="btn-small primary" onclick="viewToday()">Today</button>
+                    <button class="btn-small secondary" onclick="viewAllDays()">All</button>
+                    <button class="btn-small primary" onclick="showAddSessionModal()">➕ Add Manual Entry</button>
+                </div>
+                <div class="session-history" id="sessionHistory">
                     <div class="loading">
                         <div class="spinner"></div>
                         Loading sessions...
@@ -486,78 +1074,93 @@
                 </div>
             </div>
 
-            <!-- Bills Tracker -->
-            <div class="card">
-                <h2>💸 Bills Tracker</h2>
-                <div id="billsList">
+            <!-- Bills Conveyor -->
+            <div class="card critical">
+                <div class="card-title">💸 BILLS CONVEYOR</div>
+                <button class="btn-small primary" style="width: 100%; margin-bottom: 15px;" onclick="showAddBillModal()">➕ Add Bill</button>
+                <div class="bills-track" id="billsTrack">
                     <div class="loading">
                         <div class="spinner"></div>
                         Loading bills...
                     </div>
                 </div>
-
-                <div class="add-bill-form">
-                    <h3 style="margin-bottom: 15px; color: #333;">Add New Bill</h3>
-                    <form onsubmit="addBill(event)">
-                        <div class="form-group">
-                            <label>Bill Name</label>
-                            <input type="text" id="billName" required placeholder="e.g., Rent">
-                        </div>
-                        <div class="form-group">
-                            <label>Amount CAD</label>
-                            <input type="number" id="billAmountCAD" step="0.01" required placeholder="0.00">
-                        </div>
-                        <div class="form-group">
-                            <label>Amount USD</label>
-                            <input type="number" id="billAmountUSD" step="0.01" required placeholder="0.00">
-                        </div>
-                        <div class="form-group">
-                            <label>Due Date (Optional)</label>
-                            <input type="date" id="billDueDate">
-                        </div>
-                        <button type="submit" class="btn btn-primary" style="width: 100%;">Add Bill</button>
-                    </form>
+                <div class="bills-total">
+                    <div class="bills-total-label">TOTAL REMAINING</div>
+                    <div class="bills-total-amount" id="billsTotal">$0.00</div>
                 </div>
-
-                <button class="btn btn-secondary export-btn" onclick="exportData()">📥 Export All Data</button>
             </div>
         </div>
     </div>
 
-    <!-- Manual Entry Modal -->
-    <div class="modal" id="manualEntryModal">
+    <!-- Add Session Modal -->
+    <div class="modal" id="addSessionModal">
         <div class="modal-content">
-            <h2>Manual Session Entry</h2>
+            <div class="modal-header">➕ Add Work Session</div>
             <form onsubmit="addManualSession(event)">
-                <div class="form-group">
-                    <label>Date</label>
-                    <input type="date" id="manualDate" required>
+                <div class="form-row">
+                    <div class="input-group">
+                        <label>Date</label>
+                        <input type="date" id="manualDate" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Rate ($/hr)</label>
+                        <input type="number" id="manualRate" min="0" max="100" step="0.5" value="24" required>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label>Time Display (e.g., "9:00 AM - 5:00 PM")</label>
-                    <input type="text" id="manualTime" required placeholder="9:00 AM - 5:00 PM">
+                <div class="form-row">
+                    <div class="input-group">
+                        <label>Start Time</label>
+                        <input type="time" id="manualStartTime" required>
+                    </div>
+                    <div class="input-group">
+                        <label>End Time</label>
+                        <input type="time" id="manualEndTime" required>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label>Hours Worked</label>
-                    <input type="number" id="manualHours" step="0.01" required min="0">
+                <div class="form-row full">
+                    <div class="input-group">
+                        <label>Note (optional)</label>
+                        <input type="text" id="manualNote" placeholder="What did you work on?">
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label>Hourly Rate (USD)</label>
-                    <input type="number" id="manualRate" step="0.01" required min="0" value="24">
+                <div class="modal-actions">
+                    <button type="submit" class="btn-modal-primary">Add Session</button>
+                    <button type="button" class="btn-modal-secondary" onclick="closeAddSessionModal()">Cancel</button>
                 </div>
-                <div class="form-group">
-                    <label>Note (Optional)</label>
-                    <textarea id="manualNote" rows="3" placeholder="What did you work on?"></textarea>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Bill Modal -->
+    <div class="modal" id="addBillModal">
+        <div class="modal-content">
+            <div class="modal-header">💸 Add Bill</div>
+            <form onsubmit="addBill(event)">
+                <div class="form-row full">
+                    <div class="input-group">
+                        <label>Bill Name</label>
+                        <input type="text" id="billName" placeholder="e.g., Rent, Utilities" required>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label>
-                        <input type="checkbox" id="manualLeisure" style="width: auto; margin-right: 8px;">
-                        This is leisure time (not work)
-                    </label>
+                <div class="form-row">
+                    <div class="input-group">
+                        <label>Amount CAD</label>
+                        <input type="number" id="billAmountCAD" step="0.01" min="0" placeholder="0.00" required onchange="autoCalculateUSD()">
+                    </div>
+                    <div class="input-group">
+                        <label>Amount USD</label>
+                        <input type="number" id="billAmountUSD" step="0.01" min="0" placeholder="0.00" required>
+                    </div>
                 </div>
-                <div style="display: flex; gap: 10px; margin-top: 20px;">
-                    <button type="submit" class="btn btn-primary" style="flex: 1;">Add Session</button>
-                    <button type="button" class="btn btn-secondary" onclick="closeManualEntryModal()" style="flex: 1;">Cancel</button>
+                <div class="form-row full">
+                    <div class="input-group">
+                        <label>Due Date (optional)</label>
+                        <input type="date" id="billDueDate">
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="submit" class="btn-modal-primary">Add Bill</button>
+                    <button type="button" class="btn-modal-secondary" onclick="closeAddBillModal()">Cancel</button>
                 </div>
             </form>
         </div>
@@ -565,12 +1168,17 @@
 
     <script src="js/api.js"></script>
     <script>
-        let timerInterval = null;
-        let timerStartTime = null;
-        let elapsedSeconds = 0;
+        // Global State
+        const DEADLINE = new Date('2025-10-24T23:59:59');
+        let TOTAL_NEEDED = 2945;
         let currentUser = null;
+        let timerInterval = null;
+        let timerSeconds = 0;
+        let isTimerRunning = false;
+        let sessions = [];
+        let bills = [];
 
-        // Check authentication on page load
+        // Auth Check & Initialization
         window.addEventListener('DOMContentLoaded', async () => {
             const token = localStorage.getItem('authToken');
             if (!token) {
@@ -580,165 +1188,133 @@
 
             try {
                 currentUser = await window.api.getProfile();
-                document.getElementById('welcomeText').textContent = `Welcome, ${currentUser.name}!`;
                 await loadDashboardData();
+                initializeTimers();
             } catch (error) {
                 console.error('Auth error:', error);
                 window.location.href = '/login.html';
             }
         });
 
+        function initializeTimers() {
+            setInterval(updateCountdown, 1000);
+            updateCountdown();
+            
+            const today = new Date();
+            const manualDateEl = document.getElementById('manualDate');
+            const viewDateEl = document.getElementById('viewDate');
+            if (manualDateEl) manualDateEl.valueAsDate = today;
+            if (viewDateEl) viewDateEl.valueAsDate = today;
+        }
+
+        // Load All Dashboard Data
         async function loadDashboardData() {
             await Promise.all([
-                loadStats(),
                 loadSessions(),
-                loadBills()
+                loadBills(),
+                loadStats()
             ]);
         }
 
-        async function loadStats() {
-            try {
-                const stats = await window.api.getStats();
-                
-                document.getElementById('totalEarned').textContent = `$${stats.totalEarned.toFixed(2)}`;
-                document.getElementById('totalTarget').textContent = `$${stats.totalTarget.toFixed(2)}`;
-                document.getElementById('remaining').textContent = `$${stats.remaining.toFixed(2)}`;
-                document.getElementById('dailyGoal').textContent = `$${stats.dailyGoal.toFixed(2)}`;
-                document.getElementById('daysLeft').textContent = `${stats.daysLeft} days left until Oct 24`;
-
-                const progress = stats.totalTarget > 0 ? (stats.totalEarned / stats.totalTarget * 100) : 0;
-                const progressBar = document.getElementById('progressBar');
-                progressBar.style.width = Math.min(progress, 100) + '%';
-                progressBar.textContent = progress.toFixed(1) + '%';
-            } catch (error) {
-                console.error('Error loading stats:', error);
+        // Countdown Timer
+        function updateCountdown() {
+            const now = new Date();
+            const diff = DEADLINE - now;
+            const countdownEl = document.getElementById('countdown');
+            
+            if (!countdownEl) return;
+            
+            if (diff <= 0) {
+                countdownEl.textContent = 'DEADLINE PASSED';
+                return;
             }
+            
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+            
+            countdownEl.textContent = `${days}d ${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
         }
 
-        async function loadSessions() {
-            try {
-                const sessions = await window.api.getSessions();
-                const sessionsList = document.getElementById('sessionsList');
-
-                if (sessions.length === 0) {
-                    sessionsList.innerHTML = `
-                        <div class="empty-state">
-                            <div class="empty-state-icon">📭</div>
-                            <p>No sessions yet. Start your first timer!</p>
-                        </div>
-                    `;
-                    return;
-                }
-
-                sessionsList.innerHTML = sessions.map(session => `
-                    <div class="session-item">
-                        <div class="session-info">
-                            <div class="session-time">
-                                ${session.time_display || new Date(session.timestamp).toLocaleString()}
-                                ${session.is_leisure ? '<span class="leisure-badge">LEISURE</span>' : ''}
-                            </div>
-                            <div class="session-details">
-                                ${session.hours}h @ $${session.rate}/hr
-                                ${session.note ? ` • ${session.note}` : ''}
-                            </div>
-                        </div>
-                        <div class="session-earnings">$${parseFloat(session.earnings).toFixed(2)}</div>
-                        <button class="delete-btn" onclick="deleteSession(${session.id})">Delete</button>
-                    </div>
-                `).join('');
-            } catch (error) {
-                console.error('Error loading sessions:', error);
-                document.getElementById('sessionsList').innerHTML = `
-                    <div class="empty-state">
-                        <p style="color: #dc3545;">Error loading sessions</p>
-                    </div>
-                `;
-            }
-        }
-
-        async function loadBills() {
-            try {
-                const bills = await window.api.getBills();
-                const billsList = document.getElementById('billsList');
-
-                if (bills.length === 0) {
-                    billsList.innerHTML = `
-                        <div class="empty-state">
-                            <div class="empty-state-icon">📝</div>
-                            <p>No bills tracked yet.</p>
-                        </div>
-                    `;
-                    return;
-                }
-
-                billsList.innerHTML = bills.map(bill => `
-                    <div class="bill-item ${bill.paid ? 'paid' : ''}">
-                        <div class="bill-info">
-                            <div class="bill-name">${bill.name}</div>
-                            <div style="font-size: 12px; color: #666;">
-                                CAD $${parseFloat(bill.amount_cad).toFixed(2)}
-                                ${bill.due_date ? ` • Due: ${new Date(bill.due_date).toLocaleDateString()}` : ''}
-                            </div>
-                        </div>
-                        <div class="bill-amount">$${parseFloat(bill.amount_usd).toFixed(2)}</div>
-                        <div class="bill-actions">
-                            <button class="checkbox-btn" onclick="toggleBillPaid(${bill.id}, ${!bill.paid})">
-                                ${bill.paid ? 'Unmark' : 'Mark Paid'}
-                            </button>
-                            <button class="delete-btn" onclick="deleteBill(${bill.id})">Delete</button>
-                        </div>
-                    </div>
-                `).join('');
-            } catch (error) {
-                console.error('Error loading bills:', error);
-                document.getElementById('billsList').innerHTML = `
-                    <div class="empty-state">
-                        <p style="color: #dc3545;">Error loading bills</p>
-                    </div>
-                `;
-            }
-        }
-
+        // Work Timer Functions
         function startTimer() {
-            timerStartTime = Date.now();
-            elapsedSeconds = 0;
-            document.getElementById('startBtn').style.display = 'none';
-            document.getElementById('stopBtn').style.display = 'inline-block';
+            if (!isTimerRunning) {
+                isTimerRunning = true;
+                document.getElementById('startBtn').style.display = 'none';
+                document.getElementById('stopBtn').style.display = 'block';
+                
+                timerInterval = setInterval(() => {
+                    timerSeconds++;
+                    updateTimerDisplay();
+                    updateCurrentSessionEarnings();
+                }, 1000);
+            }
+        }
 
-            timerInterval = setInterval(() => {
-                elapsedSeconds = Math.floor((Date.now() - timerStartTime) / 1000);
-                updateTimerDisplay();
-            }, 1000);
+        function stopTimer() {
+            if (isTimerRunning) {
+                isTimerRunning = false;
+                clearInterval(timerInterval);
+                document.getElementById('startBtn').style.display = 'block';
+                document.getElementById('stopBtn').style.display = 'none';
+                logSession();
+            }
+        }
+
+        function resetTimer() {
+            if (isTimerRunning) stopTimer();
+            timerSeconds = 0;
+            updateTimerDisplay();
+            updateCurrentSessionEarnings();
         }
 
         function updateTimerDisplay() {
-            const hours = Math.floor(elapsedSeconds / 3600);
-            const minutes = Math.floor((elapsedSeconds % 3600) / 60);
-            const seconds = elapsedSeconds % 60;
-
-            document.getElementById('timerDisplay').textContent = 
-                `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            const hours = Math.floor(timerSeconds / 3600);
+            const minutes = Math.floor((timerSeconds % 3600) / 60);
+            const seconds = timerSeconds % 60;
+            const timerDisplayEl = document.getElementById('timerDisplay');
+            if (timerDisplayEl) {
+                timerDisplayEl.textContent = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            }
         }
 
-        async function stopTimer() {
-            clearInterval(timerInterval);
-            
-            const hours = (elapsedSeconds / 3600).toFixed(2);
-            const rate = 24.00;
-            const earnings = (hours * rate).toFixed(2);
-            const now = new Date();
-            const startTime = new Date(timerStartTime);
+        function updateCurrentSessionEarnings() {
+            const rateEl = document.getElementById('hourlyRate');
+            if (!rateEl) return;
+            const rate = parseFloat(rateEl.value);
+            const hours = timerSeconds / 3600;
+            const earnings = hours * rate;
+            const earningsEl = document.getElementById('currentSessionEarnings');
+            if (earningsEl) earningsEl.textContent = `$${earnings.toFixed(2)}`;
+        }
 
+        async function logSession() {
+            if (timerSeconds === 0) return;
+            
+            const rateEl = document.getElementById('hourlyRate');
+            if (!rateEl) return;
+            
+            const rate = parseFloat(rateEl.value);
+            const hours = timerSeconds / 3600;
+            const earnings = hours * rate;
+            const isLeisure = rate === 0;
+            const opportunityCost = isLeisure ? hours * 24 : 0;
+            const note = prompt('Add a note for this session (optional):') || '';
+            
+            const startTime = new Date(Date.now() - timerSeconds * 1000);
+            const endTime = new Date();
+            
             const sessionData = {
-                time_display: `${startTime.toLocaleTimeString()} - ${now.toLocaleTimeString()}`,
+                time_display: `${startTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })} - ${endTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}`,
                 timestamp: startTime.toISOString(),
-                date: now.toISOString().split('T')[0],
-                hours: parseFloat(hours),
+                date: startTime.toISOString().split('T')[0],
+                hours: parseFloat(hours.toFixed(2)),
                 rate: rate,
-                earnings: parseFloat(earnings),
-                note: '',
-                is_leisure: false,
-                opportunity_cost: 0,
+                earnings: parseFloat(earnings.toFixed(2)),
+                note: note,
+                is_leisure: isLeisure,
+                opportunity_cost: parseFloat(opportunityCost.toFixed(2)),
                 is_manual: false
             };
 
@@ -746,71 +1322,408 @@
                 await window.api.createSession(sessionData);
                 await loadDashboardData();
                 
-                elapsedSeconds = 0;
-                document.getElementById('timerDisplay').textContent = '00:00:00';
-                document.getElementById('startBtn').style.display = 'inline-block';
-                document.getElementById('stopBtn').style.display = 'none';
+                timerSeconds = 0;
+                updateTimerDisplay();
+                updateCurrentSessionEarnings();
             } catch (error) {
                 alert('Error saving session: ' + error.message);
             }
         }
 
-        function showManualEntryModal() {
-            document.getElementById('manualDate').valueAsDate = new Date();
-            document.getElementById('manualEntryModal').classList.add('show');
+        // Load Sessions
+        async function loadSessions() {
+            try {
+                sessions = await window.api.getSessions();
+                updateSessionHistory();
+                updateStats();
+            } catch (error) {
+                console.error('Error loading sessions:', error);
+                document.getElementById('sessionHistory').innerHTML = `
+                    <div class="empty-state">
+                        <p style="color: #dc3545;">Error loading sessions</p>
+                    </div>
+                `;
+            }
         }
 
-        function closeManualEntryModal() {
-            document.getElementById('manualEntryModal').classList.remove('show');
+        // Load Bills
+        async function loadBills() {
+            try {
+                bills = await window.api.getBills();
+                renderBills();
+                updateStats();
+            } catch (error) {
+                console.error('Error loading bills:', error);
+                document.getElementById('billsTrack').innerHTML = `
+                    <div class="empty-state">
+                        <p style="color: #dc3545;">Error loading bills</p>
+                    </div>
+                `;
+            }
         }
 
+        // Render Bills with Urgency
+        function renderBills() {
+            const now = new Date();
+            const track = document.getElementById('billsTrack');
+            if (!track) return;
+            
+            if (bills.length === 0) {
+                track.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📭</div>
+                        <p>No bills tracked yet</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            const sortedBills = [...bills].sort((a, b) => {
+                if (a.paid && !b.paid) return 1;
+                if (!a.paid && b.paid) return -1;
+                if (!a.due_date) return 1;
+                if (!b.due_date) return -1;
+                return new Date(a.due_date) - new Date(b.due_date);
+            });
+            
+            track.innerHTML = sortedBills.map(bill => {
+                const dueDate = bill.due_date ? new Date(bill.due_date) : null;
+                const daysUntil = dueDate ? Math.ceil((dueDate - now) / (1000 * 60 * 60 * 24)) : null;
+                let urgencyClass = '';
+                let dueText = '';
+                
+                if (bill.paid) {
+                    urgencyClass = 'paid';
+                    dueText = '✅ PAID';
+                } else if (!dueDate) {
+                    urgencyClass = '';
+                    dueText = 'No due date';
+                } else if (daysUntil < 0) {
+                    urgencyClass = 'urgent';
+                    dueText = `⚠️ OVERDUE by ${Math.abs(daysUntil)} days`;
+                } else if (daysUntil === 0) {
+                    urgencyClass = 'urgent';
+                    dueText = '🔴 DUE TODAY';
+                } else if (daysUntil <= 3) {
+                    urgencyClass = 'urgent';
+                    dueText = `🔴 Due in ${daysUntil} days`;
+                } else if (daysUntil <= 7) {
+                    urgencyClass = 'warning';
+                    dueText = `🟡 Due in ${daysUntil} days`;
+                } else {
+                    dueText = `Due ${dueDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+                }
+                
+                return `
+                    <div class="bill-item ${urgencyClass}">
+                        <div class="bill-info">
+                            <div class="bill-name">${bill.name}</div>
+                            <div class="bill-due ${urgencyClass === 'urgent' || urgencyClass === 'warning' ? 'urgent' : ''}">${dueText}</div>
+                        </div>
+                        <div class="bill-amount ${bill.paid ? 'paid' : ''}">
+                            $${parseFloat(bill.amount_cad).toFixed(2)}
+                            <span class="bill-amount-usd">~$${Math.round(parseFloat(bill.amount_usd))} USD</span>
+                        </div>
+                        <div class="session-actions">
+                            <button class="action-btn" onclick="toggleBillPaid(${bill.id}, ${!bill.paid})">${bill.paid ? 'Unpaid' : 'Paid'}</button>
+                            <button class="action-btn delete" onclick="deleteBill(${bill.id})">🗑️</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            const totalUnpaidCAD = sortedBills.filter(b => !b.paid).reduce((sum, b) => sum + parseFloat(b.amount_cad), 0);
+            const billsTotalEl = document.getElementById('billsTotal');
+            if (billsTotalEl) billsTotalEl.textContent = `$${totalUnpaidCAD.toFixed(2)}`;
+        }
+
+        // Update Session History
+        function updateSessionHistory() {
+            const container = document.getElementById('sessionHistory');
+            if (!container) return;
+            
+            const viewDateInput = document.getElementById('viewDate');
+            const viewDateValue = viewDateInput ? viewDateInput.value : null;
+            
+            let filteredSessions = sessions;
+            let viewingAll = false;
+            
+            if (viewDateValue) {
+                const viewDate = new Date(viewDateValue).toDateString();
+                filteredSessions = sessions.filter(s => new Date(s.timestamp).toDateString() === viewDate);
+            } else {
+                viewingAll = true;
+            }
+            
+            if (filteredSessions.length === 0) {
+                container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">📭</div><p>${viewingAll ? 'No sessions logged yet' : 'No sessions on this date'}</p></div>`;
+                return;
+            }
+            
+            if (viewingAll) {
+                const sessionsByDate = {};
+                filteredSessions.forEach(s => {
+                    const date = new Date(s.timestamp).toDateString();
+                    if (!sessionsByDate[date]) sessionsByDate[date] = [];
+                    sessionsByDate[date].push(s);
+                });
+                
+                container.innerHTML = Object.keys(sessionsByDate)
+                    .sort((a, b) => new Date(b) - new Date(a))
+                    .map(date => {
+                        const dateSessions = sessionsByDate[date];
+                        const totalHours = dateSessions.reduce((sum, s) => sum + parseFloat(s.hours), 0);
+                        const totalEarnings = dateSessions.filter(s => !s.is_leisure).reduce((sum, s) => sum + parseFloat(s.earnings), 0);
+                        
+                        return `
+                            <div class="date-group-header">
+                                <span>${new Date(date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                                <span class="date-group-stats">${totalHours.toFixed(1)}h • $${totalEarnings.toFixed(0)}</span>
+                            </div>
+                            ${renderSessionItems(dateSessions)}
+                        `;
+                    }).join('');
+            } else {
+                container.innerHTML = renderSessionItems(filteredSessions);
+            }
+        }
+        
+        function renderSessionItems(sessionList) {
+            return sessionList.map((s) => {
+                const isLeisure = s.rate === 0 || s.is_leisure;
+                const displayEarnings = isLeisure ? 
+                    `-$${(s.opportunity_cost || (parseFloat(s.hours) * 24)).toFixed(2)}` :
+                    `$${parseFloat(s.earnings).toFixed(2)}`;
+                
+                return `
+                    <div class="session-item ${isLeisure ? 'leisure' : ''}">
+                        <div class="session-info">
+                            <div class="session-time">
+                                ${s.time_display || new Date(s.timestamp).toLocaleString()}
+                                ${isLeisure ? '<span style="font-size: 1.2em;">🎮</span>' : ''}
+                                ${s.is_manual ? '<span class="badge manual">MANUAL</span>' : ''}
+                            </div>
+                            <div class="session-details">${s.hours}h @ $${s.rate}/hr</div>
+                            ${s.note ? `<div class="session-note">${s.note}</div>` : ''}
+                        </div>
+                        <div class="session-earnings ${isLeisure ? 'negative' : ''}">${displayEarnings}</div>
+                        <div class="session-actions">
+                            <button class="action-btn" onclick="editSession(${s.id})">✏️</button>
+                            <button class="action-btn delete" onclick="deleteSession(${s.id})">🗑️</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function viewToday() {
+            const viewDateEl = document.getElementById('viewDate');
+            if (viewDateEl) viewDateEl.valueAsDate = new Date();
+            updateSessionHistory();
+        }
+        
+        function viewAllDays() {
+            const viewDateEl = document.getElementById('viewDate');
+            if (viewDateEl) viewDateEl.value = '';
+            updateSessionHistory();
+        }
+
+        // Load and Update Stats
+        async function loadStats() {
+            try {
+                const stats = await window.api.getStats();
+                const todayStats = await window.api.getTodayStats();
+                
+                TOTAL_NEEDED = stats.totalTarget;
+                
+                updateStatsDisplay(stats, todayStats);
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+
+        function updateStats() {
+            if (sessions.length === 0 && bills.length === 0) return;
+            
+            const today = new Date().toDateString();
+            const todaySessions = sessions.filter(s => new Date(s.timestamp).toDateString() === today);
+            
+            const todayHours = todaySessions.reduce((sum, s) => sum + parseFloat(s.hours), 0);
+            const todayEarnings = todaySessions.filter(s => !s.is_leisure).reduce((sum, s) => sum + parseFloat(s.earnings), 0);
+            
+            const totalEarned = sessions.filter(s => !s.is_leisure).reduce((sum, s) => sum + parseFloat(s.earnings), 0);
+            
+            const totalBillsUSD = bills.filter(b => !b.paid).reduce((sum, b) => sum + parseFloat(b.amount_usd), 0);
+            const totalBillsCAD = bills.filter(b => !b.paid).reduce((sum, b) => sum + parseFloat(b.amount_cad), 0);
+            const totalWithTax = totalBillsUSD / 0.67;
+            
+            const remaining = totalWithTax - totalEarned;
+            const daysLeft = Math.max(1, Math.ceil((DEADLINE - new Date()) / (1000 * 60 * 60 * 24)));
+            const dailyGoal = remaining / daysLeft;
+            
+            const rateEl = document.getElementById('hourlyRate');
+            const rate = rateEl ? parseFloat(rateEl.value) : 24;
+            const hoursPerDay = rate > 0 ? dailyGoal / rate : 0;
+            const totalHours = rate > 0 ? remaining / rate : 0;
+            
+            const progress = (totalEarned / totalWithTax) * 100;
+            const todayProgress = (todayEarnings / dailyGoal) * 100;
+            
+            const els = {
+                dailyGoal: document.getElementById('dailyGoal'),
+                todayProgress: document.getElementById('todayProgress'),
+                todayProgressText: document.getElementById('todayProgressText'),
+                todayStatus: document.getElementById('todayStatus'),
+                totalEarned: document.getElementById('totalEarned'),
+                totalNeeded: document.getElementById('totalNeeded'),
+                sprintProgress: document.getElementById('sprintProgress'),
+                sprintProgressText: document.getElementById('sprintProgressText'),
+                remaining: document.getElementById('remaining'),
+                daysLeft: document.getElementById('daysLeft'),
+                todayHours: document.getElementById('todayHours'),
+                todayEarnings: document.getElementById('todayEarnings'),
+                hoursNeeded: document.getElementById('hoursNeeded'),
+                totalHoursNeeded: document.getElementById('totalHoursNeeded'),
+                billsTotalCAD: document.getElementById('billsTotalCAD'),
+                billsTotalUSD: document.getElementById('billsTotalUSD'),
+                billsWithTax: document.getElementById('billsWithTax'),
+                billsCovered: document.getElementById('billsCovered')
+            };
+            
+            if (els.dailyGoal) els.dailyGoal.textContent = `$${Math.round(dailyGoal)}`;
+            if (els.todayProgress) {
+                els.todayProgress.style.width = Math.min(todayProgress, 100) + '%';
+                els.todayProgress.classList.toggle('behind', todayProgress < 100);
+            }
+            if (els.todayProgressText) els.todayProgressText.textContent = `$${Math.round(todayEarnings)} / $${Math.round(dailyGoal)}`;
+            
+            if (els.todayStatus) {
+                if (todayEarnings >= dailyGoal) {
+                    els.todayStatus.textContent = `✅ GOAL MET! +$${(todayEarnings - dailyGoal).toFixed(2)} extra`;
+                    els.todayStatus.className = 'status-message status-ahead';
+                } else {
+                    const needed = dailyGoal - todayEarnings;
+                    els.todayStatus.textContent = `You need $${needed.toFixed(2)} more today`;
+                    els.todayStatus.className = 'status-message status-behind';
+                }
+            }
+            
+            if (els.totalEarned) els.totalEarned.textContent = `$${Math.round(totalEarned)}`;
+            if (els.totalNeeded) els.totalNeeded.textContent = Math.round(totalWithTax);
+            if (els.sprintProgress) els.sprintProgress.style.width = Math.min(progress, 100) + '%';
+            if (els.sprintProgressText) els.sprintProgressText.textContent = Math.round(progress) + '%';
+            if (els.remaining) els.remaining.textContent = `$${Math.round(remaining)}`;
+            if (els.daysLeft) els.daysLeft.textContent = daysLeft;
+            if (els.todayHours) els.todayHours.textContent = todayHours.toFixed(1);
+            if (els.todayEarnings) els.todayEarnings.textContent = `$${Math.round(todayEarnings)}`;
+            if (els.hoursNeeded) els.hoursNeeded.textContent = hoursPerDay.toFixed(1);
+            if (els.totalHoursNeeded) els.totalHoursNeeded.textContent = Math.round(totalHours);
+            
+            if (els.billsTotalCAD) els.billsTotalCAD.textContent = `$${Math.round(totalBillsCAD)}`;
+            if (els.billsTotalUSD) els.billsTotalUSD.textContent = `$${Math.round(totalBillsUSD)}`;
+            if (els.billsWithTax) els.billsWithTax.textContent = `$${Math.round(totalWithTax)}`;
+            if (els.billsCovered) els.billsCovered.textContent = `${Math.round(progress)}%`;
+        }
+
+        function updateStatsDisplay(stats, todayStats) {
+            // This will be called from loadStats with API data
+            updateStats(); // Reuse the local calculation logic
+        }
+
+        // Burger Menu
+        function toggleBurgerMenu() {
+            const menu = document.getElementById('burgerMenu');
+            const overlay = document.getElementById('burgerOverlay');
+            menu.classList.toggle('open');
+            overlay.classList.toggle('show');
+        }
+
+        function closeBurgerMenu() {
+            document.getElementById('burgerMenu').classList.remove('open');
+            document.getElementById('burgerOverlay').classList.remove('show');
+        }
+
+        // Modal Functions
+        function showAddSessionModal() {
+            document.getElementById('addSessionModal').classList.add('show');
+        }
+
+        function closeAddSessionModal() {
+            document.getElementById('addSessionModal').classList.remove('show');
+        }
+
+        function showAddBillModal() {
+            document.getElementById('addBillModal').classList.add('show');
+        }
+
+        function closeAddBillModal() {
+            document.getElementById('addBillModal').classList.remove('show');
+        }
+
+        // Add Manual Session
         async function addManualSession(event) {
             event.preventDefault();
-
-            const date = document.getElementById('manualDate').value;
-            const timeDisplay = document.getElementById('manualTime').value;
-            const hours = parseFloat(document.getElementById('manualHours').value);
+            
+            const dateInput = document.getElementById('manualDate').value;
+            const startTime = document.getElementById('manualStartTime').value;
+            const endTime = document.getElementById('manualEndTime').value;
             const rate = parseFloat(document.getElementById('manualRate').value);
             const note = document.getElementById('manualNote').value;
-            const isLeisure = document.getElementById('manualLeisure').checked;
-
-            const earnings = (hours * rate).toFixed(2);
-            const opportunityCost = isLeisure ? (hours * rate).toFixed(2) : 0;
-
+            
+            if (!dateInput || !startTime || !endTime) {
+                alert('Please fill in Date, Start Time, and End Time');
+                return;
+            }
+            
+            const entryDate = new Date(dateInput);
+            const [startHour, startMinute] = startTime.split(':').map(Number);
+            const [endHour, endMinute] = endTime.split(':').map(Number);
+            
+            let startTotalMinutes = startHour * 60 + startMinute;
+            let endTotalMinutes = endHour * 60 + endMinute;
+            if (endTotalMinutes <= startTotalMinutes) endTotalMinutes += 24 * 60;
+            
+            const hours = (endTotalMinutes - startTotalMinutes) / 60;
+            
+            const startTimeFormatted = new Date(entryDate);
+            startTimeFormatted.setHours(startHour, startMinute);
+            const endTimeFormatted = new Date(entryDate);
+            endTimeFormatted.setHours(endHour, endMinute);
+            
+            const timeDisplay = `${startTimeFormatted.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })} - ${endTimeFormatted.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}`;
+            
+            const isLeisure = rate === 0;
+            const earnings = isLeisure ? 0 : hours * rate;
+            const opportunityCost = isLeisure ? hours * 24 : 0;
+            
             const sessionData = {
                 time_display: timeDisplay,
-                timestamp: new Date(date + 'T12:00:00').toISOString(),
-                date: date,
-                hours: hours,
+                timestamp: entryDate.toISOString(),
+                date: entryDate.toISOString().split('T')[0],
+                hours: parseFloat(hours.toFixed(2)),
                 rate: rate,
-                earnings: isLeisure ? 0 : parseFloat(earnings),
+                earnings: parseFloat(earnings.toFixed(2)),
                 note: note,
                 is_leisure: isLeisure,
-                opportunity_cost: parseFloat(opportunityCost),
+                opportunity_cost: parseFloat(opportunityCost.toFixed(2)),
                 is_manual: true
             };
 
             try {
                 await window.api.createSession(sessionData);
                 await loadDashboardData();
-                closeManualEntryModal();
-                event.target.reset();
+                closeAddSessionModal();
+                
+                // Reset form
+                document.getElementById('manualStartTime').value = '';
+                document.getElementById('manualEndTime').value = '';
+                document.getElementById('manualNote').value = '';
             } catch (error) {
                 alert('Error adding session: ' + error.message);
             }
         }
 
-        async function deleteSession(id) {
-            if (!confirm('Delete this session?')) return;
-
-            try {
-                await window.api.deleteSession(id);
-                await loadDashboardData();
-            } catch (error) {
-                alert('Error deleting session: ' + error.message);
-            }
-        }
-
+        // Add Bill
         async function addBill(event) {
             event.preventDefault();
 
@@ -829,12 +1742,76 @@
             try {
                 await window.api.createBill(billData);
                 await loadDashboardData();
-                event.target.reset();
+                closeAddBillModal();
+                
+                // Reset form
+                document.getElementById('billName').value = '';
+                document.getElementById('billAmountCAD').value = '';
+                document.getElementById('billAmountUSD').value = '';
+                document.getElementById('billDueDate').value = '';
             } catch (error) {
                 alert('Error adding bill: ' + error.message);
             }
         }
 
+        function autoCalculateUSD() {
+            const cadInput = document.getElementById('billAmountCAD');
+            const usdInput = document.getElementById('billAmountUSD');
+            
+            if (cadInput && usdInput && cadInput.value) {
+                const cad = parseFloat(cadInput.value);
+                const usd = (cad / 1.4).toFixed(2);
+                usdInput.value = usd;
+            }
+        }
+
+        // Edit Session
+        async function editSession(id) {
+            const session = sessions.find(s => s.id === id);
+            if (!session) return;
+            
+            const newRate = prompt(`Edit hourly rate (was $${session.rate}/hr):`, session.rate);
+            if (newRate === null) return;
+            
+            const rate = parseFloat(newRate);
+            if (isNaN(rate) || rate < 0) {
+                alert('Please enter a valid rate (0 or higher)');
+                return;
+            }
+            
+            const newNote = prompt(`Edit note (optional):`, session.note || '');
+            const hours = parseFloat(session.hours);
+            const isLeisure = rate === 0;
+            const newEarnings = isLeisure ? 0 : hours * rate;
+            const opportunityCost = isLeisure ? hours * 24 : 0;
+            
+            try {
+                await window.api.updateSession(id, {
+                    rate: rate,
+                    earnings: newEarnings,
+                    note: newNote,
+                    is_leisure: isLeisure,
+                    opportunity_cost: opportunityCost
+                });
+                await loadDashboardData();
+            } catch (error) {
+                alert('Error updating session: ' + error.message);
+            }
+        }
+
+        // Delete Session
+        async function deleteSession(id) {
+            if (!confirm('Delete this session?')) return;
+            
+            try {
+                await window.api.deleteSession(id);
+                await loadDashboardData();
+            } catch (error) {
+                alert('Error deleting session: ' + error.message);
+            }
+        }
+
+        // Toggle Bill Paid
         async function toggleBillPaid(id, paid) {
             try {
                 await window.api.markBillPaid(id, paid);
@@ -844,18 +1821,19 @@
             }
         }
 
+        // Delete Bill
         async function deleteBill(id) {
             if (!confirm('Delete this bill?')) return;
-
+            
             try {
-                await window.api.deleteSession(id); // Using deleteSession since deleteBill doesn't exist in API
+                await window.api.deleteBill(id);
                 await loadDashboardData();
             } catch (error) {
-                // Try alternative approach
                 alert('Error deleting bill: ' + error.message);
             }
         }
 
+        // Export Data
         async function exportData() {
             try {
                 const data = await window.api.exportData();
@@ -868,11 +1846,37 @@
                 a.click();
                 document.body.removeChild(a);
                 URL.revokeObjectURL(url);
+                closeBurgerMenu();
             } catch (error) {
                 alert('Error exporting data: ' + error.message);
             }
         }
 
+        // Import Data
+        function importData() {
+            document.getElementById('importFile').click();
+            closeBurgerMenu();
+        }
+
+        function handleImport(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    // Handle import logic here
+                    alert('Import functionality coming soon!');
+                } catch (err) {
+                    alert('❌ Error importing data: ' + err.message);
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+
+        // Logout
         function handleLogout() {
             if (confirm('Are you sure you want to logout?')) {
                 localStorage.removeItem('authToken');
@@ -880,13 +1884,23 @@
             }
         }
 
-        // Close modal when clicking outside
-        document.getElementById('manualEntryModal').addEventListener('click', (e) => {
-            if (e.target.id === 'manualEntryModal') {
-                closeManualEntryModal();
+        // Close modals on outside click
+        document.getElementById('addSessionModal').addEventListener('click', (e) => {
+            if (e.target.id === 'addSessionModal') closeAddSessionModal();
+        });
+
+        document.getElementById('addBillModal').addEventListener('click', (e) => {
+            if (e.target.id === 'addBillModal') closeAddBillModal();
+        });
+
+        // ESC key to close
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeBurgerMenu();
+                closeAddSessionModal();
+                closeAddBillModal();
             }
         });
     </script>
 </body>
 </html>
-

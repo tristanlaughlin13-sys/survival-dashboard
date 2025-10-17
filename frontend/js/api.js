@@ -1,6 +1,6 @@
 // API Communication Layer
-const API_URL = window.location.hostname === 'localhost' 
-  ? 'http://localhost:3000' 
+const API_URL = window.location.hostname === 'localhost'
+  ? 'http://localhost:3000'
   : 'https://survival-dashboard-api.onrender.com'; // Your Render backend
 
 class API {
@@ -12,11 +12,11 @@ class API {
     const headers = {
       'Content-Type': 'application/json'
     };
-    
+
     if (this.token) {
       headers['Authorization'] = `Bearer ${this.token}`;
     }
-    
+
     return headers;
   }
 
@@ -119,6 +119,12 @@ class API {
     return await this.request(`/api/bills/${id}/paid`, {
       method: 'PATCH',
       body: JSON.stringify({ paid })
+    });
+  }
+
+  async deleteBill(id) {
+    return await this.request(`/api/bills/${id}`, {
+      method: 'DELETE'
     });
   }
 
