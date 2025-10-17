@@ -10,10 +10,10 @@ export function generateRandomSessions() {
     const sessions = [];
     const today = new Date();
     const names = [
-        'Client Website', 
-        'App Development', 
-        'Consulting Call', 
-        'Bug Fixes', 
+        'Client Website',
+        'App Development',
+        'Consulting Call',
+        'Bug Fixes',
         'Code Review',
         'Feature Implementation',
         'Database Migration',
@@ -22,21 +22,21 @@ export function generateRandomSessions() {
         'Testing & QA'
     ];
     const rates = [45, 55, 65, 75, 85, 95];
-    
+
     // Generate 15-25 sessions over last 14 days
     const sessionCount = Math.floor(Math.random() * 11) + 15;
-    
+
     for (let i = 0; i < sessionCount; i++) {
         const daysAgo = Math.floor(Math.random() * 14);
         const date = new Date(today.getTime() - daysAgo * 24 * 60 * 60 * 1000);
         const hours = (Math.random() * 6 + 1).toFixed(2); // 1-7 hours
         const rate = rates[Math.floor(Math.random() * rates.length)];
         const earnings = (parseFloat(hours) * rate).toFixed(2);
-        
+
         // Random time of day
         date.setHours(Math.floor(Math.random() * 12) + 8); // 8am-8pm
         date.setMinutes(Math.floor(Math.random() * 60));
-        
+
         sessions.push({
             id: `demo-session-${i}`,
             time_display: date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
@@ -53,7 +53,7 @@ export function generateRandomSessions() {
             updated_at: date.toISOString()
         });
     }
-    
+
     return sessions.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 }
 
@@ -74,11 +74,11 @@ export function generateRandomBills() {
         { name: 'Subscription Services', cadRange: [15, 80], usdFactor: 0.7143 },
         { name: 'Student Loan', cadRange: [200, 600], usdFactor: 0.7143 }
     ];
-    
+
     const bills = [];
     const billCount = Math.floor(Math.random() * 6) + 7; // 7-12 bills
     const usedTypes = new Set();
-    
+
     for (let i = 0; i < billCount; i++) {
         // Pick a unique bill type
         let billType;
@@ -86,13 +86,13 @@ export function generateRandomBills() {
             billType = billTypes[Math.floor(Math.random() * billTypes.length)];
         } while (usedTypes.has(billType.name) && usedTypes.size < billTypes.length);
         usedTypes.add(billType.name);
-        
+
         const amountCAD = (Math.random() * (billType.cadRange[1] - billType.cadRange[0]) + billType.cadRange[0]).toFixed(2);
         const amountUSD = (amountCAD * billType.usdFactor).toFixed(2);
         const daysUntilDue = Math.floor(Math.random() * 30) - 5; // -5 to +25 days
         const dueDate = new Date(Date.now() + daysUntilDue * 24 * 60 * 60 * 1000);
         const paid = daysUntilDue < 0 ? (Math.random() > 0.3) : false; // 70% of past bills are paid
-        
+
         bills.push({
             id: `demo-bill-${i}`,
             name: billType.name,
@@ -105,7 +105,7 @@ export function generateRandomBills() {
             updated_at: new Date().toISOString()
         });
     }
-    
+
     return bills.sort((a, b) => new Date(a.due_date) - new Date(b.due_date));
 }
 
@@ -118,7 +118,7 @@ export function generateDemoSettings() {
     const hourlyRates = [45, 55, 65, 75, 85];
     const taxRates = [25, 30, 35];
     const initialBalances = [200, 300, 400, 500, 600];
-    
+
     return {
         sprint_end_date: sprintEnd.toISOString(),
         target_bills_mode: 'auto_unpaid',
@@ -151,7 +151,7 @@ export function loadDemoData() {
     const storedSessions = sessionStorage.getItem('demoSessions');
     const storedBills = sessionStorage.getItem('demoBills');
     const storedSettings = sessionStorage.getItem('demoSettings');
-    
+
     if (storedSessions && storedBills && storedSettings) {
         return {
             sessions: JSON.parse(storedSessions),
@@ -159,7 +159,7 @@ export function loadDemoData() {
             settings: JSON.parse(storedSettings)
         };
     }
-    
+
     return null;
 }
 

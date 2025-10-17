@@ -1,6 +1,6 @@
 // ===== STATISTICS CALCULATIONS =====
 
-import { safeParseFloat, calculateDaysLeft } from './utils.js';
+import { safeParseFloat } from './utils.js';
 
 /**
  * Calculate daily goal
@@ -132,15 +132,15 @@ export function calculateTotalHoursNeeded(remaining, rate) {
  */
 export function processInitialBalance(settings) {
     if (!settings || !settings.initial_balance) return 0;
-    
+
     let balance = safeParseFloat(settings.initial_balance);
-    
+
     // Convert to USD if in CAD
     if (balance > 0 && settings.initial_balance_currency === 'CAD') {
         const exchangeRate = safeParseFloat(settings.exchange_rate_cad_to_usd, 0.7143);
         balance = balance * exchangeRate;
     }
-    
+
     return balance;
 }
 
@@ -152,7 +152,7 @@ export function processInitialBalance(settings) {
  */
 export function calculateTargetBills(bills, settings) {
     if (!settings) return 0;
-    
+
     if (settings.target_bills_mode === 'manual') {
         return safeParseFloat(settings.target_bills_manual);
     } else if (settings.target_bills_mode === 'auto_all') {

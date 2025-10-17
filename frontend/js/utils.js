@@ -130,7 +130,7 @@ export function isToday(date) {
  */
 export function getBillUrgency(dueDate, isPaid) {
     if (isPaid) return 'paid';
-    
+
     const daysLeft = calculateDaysLeft(dueDate);
     if (daysLeft <= 0) return 'urgent';
     if (daysLeft <= 3) return 'urgent';
