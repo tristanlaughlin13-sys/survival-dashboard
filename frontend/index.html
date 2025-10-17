@@ -1812,6 +1812,91 @@
             return !localStorage.getItem('authToken');
         }
 
+        // ===== DEMO MODE: SessionStorage CRUD Wrappers =====
+
+        function saveDemoData() {
+            if (isDemoMode) {
+                sessionStorage.setItem('demoSessions', JSON.stringify(sessions));
+                sessionStorage.setItem('demoBills', JSON.stringify(bills));
+                sessionStorage.setItem('demoSettings', JSON.stringify(userSettings));
+            }
+        }
+
+        async function demo_createSession(sessionData) {
+            sessionData.id = `demo-session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+            sessionData.created_at = new Date().toISOString();
+            sessionData.updated_at = new Date().toISOString();
+            sessions.unshift(sessionData);
+            saveDemoData();
+            return sessionData;
+        }
+
+        async function demo_updateSession(id, sessionData) {
+            const index = sessions.findIndex(s => s.id === id);
+            if (index !== -1) {
+                sessions[index] = { ...sessions[index], ...sessionData, updated_at: new Date().toISOString() };
+                saveDemoData();
+                return sessions[index];
+            }
+            throw new Error('Session not found');
+        }
+
+        async function demo_deleteSession(id) {
+            const index = sessions.findIndex(s => s.id === id);
+            if (index !== -1) {
+                sessions.splice(index, 1);
+                saveDemoData();
+            }
+        }
+
+        async function demo_createBill(billData) {
+            billData.id = `demo-bill-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+            billData.created_at = new Date().toISOString();
+            billData.updated_at = new Date().toISOString();
+            billData.paid = false;
+            billData.paid_at = null;
+            bills.push(billData);
+            saveDemoData();
+            return billData;
+        }
+
+        async function demo_updateBill(id, billData) {
+            const index = bills.findIndex(b => b.id === id);
+            if (index !== -1) {
+                bills[index] = { ...bills[index], ...billData, updated_at: new Date().toISOString() };
+                saveDemoData();
+                return bills[index];
+            }
+            throw new Error('Bill not found');
+        }
+
+        async function demo_markBillPaid(id, paid) {
+            const index = bills.findIndex(b => b.id === id);
+            if (index !== -1) {
+                bills[index].paid = paid;
+                bills[index].paid_at = paid ? new Date().toISOString() : null;
+                bills[index].updated_at = new Date().toISOString();
+                saveDemoData();
+                return bills[index];
+            }
+            throw new Error('Bill not found');
+        }
+
+        async function demo_deleteBill(id) {
+            const index = bills.findIndex(b => b.id === id);
+            if (index !== -1) {
+                bills.splice(index, 1);
+                saveDemoData();
+            }
+        }
+
+        async function demo_updateSettings(settingsData) {
+            userSettings = { ...userSettings, ...settingsData };
+            DEADLINE = new Date(userSettings.sprint_end_date);
+            saveDemoData();
+            return userSettings;
+        }
+
         // ===== DEMO MODE: Load Demo Data =====
         
         function loadDemoMode() {
@@ -2600,6 +2685,58 @@
             document.getElementById('editSessionEarnings').textContent = `$${earnings.toFixed(2)}`;
         }
 
+        async function addManualSession(event) {
+            event.preventDefault();
+
+            const date = document.getElementById('manualDate').value;
+            const startTime = document.getElementById('manualStartTime').value;
+            const endTime = document.getElementById('manualEndTime').value;
+            const rate = parseFloat(document.getElementById('manualRate').value);
+            const note = document.getElementById('manualNote').value;
+
+            // Calculate hours
+            const start = new Date(`${date}T${startTime}`);
+            const end = new Date(`${date}T${endTime}`);
+            const hours = (end - start) / (1000 * 60 * 60);
+
+            if (hours <= 0) {
+                alert('❌ End time must be after start time');
+                return;
+            }
+
+            const earnings = hours * rate;
+            const timestamp = start.toISOString();
+
+            const sessionData = {
+                date,
+                timestamp,
+                time_display: start.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
+                hours: parseFloat(hours.toFixed(2)),
+                rate,
+                earnings: parseFloat(earnings.toFixed(2)),
+                note,
+                is_leisure: false,
+                opportunity_cost: 0,
+                is_manual: true
+            };
+
+            try {
+                if (isDemoMode) {
+                    await demo_createSession(sessionData);
+                    renderSessions();
+                    updateStats();
+                } else {
+                    await window.api.createSession(sessionData);
+                    await loadDashboardData();
+                }
+                
+                closeAddSessionModal();
+                alert('✅ Session added successfully!');
+            } catch (error) {
+                alert('❌ Error adding session: ' + error.message);
+            }
+        }
+
         async function updateSession(event) {
             event.preventDefault();
 
@@ -2614,20 +2751,28 @@
             const timestamp = new Date(`${date}T${time}`).toISOString();
             const earnings = isLeisure ? 0 : hours * rate;
 
-            try {
-                await window.api.updateSession(sessionId, {
-                    date,
-                    timestamp,
-                    time_display: time,
-                    hours,
-                    rate,
-                    earnings,
-                    note,
-                    is_leisure: isLeisure,
-                    opportunity_cost: isLeisure ? hours * rate : 0
-                });
+            const sessionData = {
+                date,
+                timestamp,
+                time_display: time,
+                hours,
+                rate,
+                earnings,
+                note,
+                is_leisure: isLeisure,
+                opportunity_cost: isLeisure ? hours * rate : 0
+            };
 
-                await loadDashboardData();
+            try {
+                if (isDemoMode) {
+                    await demo_updateSession(sessionId, sessionData);
+                    renderSessions();
+                    updateStats();
+                } else {
+                    await window.api.updateSession(sessionId, sessionData);
+                    await loadDashboardData();
+                }
+
                 closeEditSessionModal();
                 alert('✅ Session updated successfully!');
             } catch (error) {
@@ -2777,8 +2922,16 @@
             };
 
             try {
-                await window.api.createBill(billData);
-                await loadDashboardData();
+                if (isDemoMode) {
+                    await demo_createBill(billData);
+                    renderBills();
+                    recalculateTarget();
+                    updateStats();
+                } else {
+                    await window.api.createBill(billData);
+                    await loadDashboardData();
+                }
+                
                 closeAddBillModal();
 
                 // Reset form
@@ -2815,8 +2968,14 @@
             if (!confirm('Delete this session?')) return;
 
             try {
-                await window.api.deleteSession(id);
-                await loadDashboardData();
+                if (isDemoMode) {
+                    await demo_deleteSession(id);
+                    renderSessions();
+                    updateStats();
+                } else {
+                    await window.api.deleteSession(id);
+                    await loadDashboardData();
+                }
             } catch (error) {
                 alert('Error deleting session: ' + error.message);
             }
@@ -2862,16 +3021,32 @@
             };
 
             try {
-                await window.api.updateBill(billId, updates);
+                if (isDemoMode) {
+                    await demo_updateBill(billId, updates);
+                    
+                    // Also update paid status if changed
+                    const paid = document.getElementById('editBillPaid').checked;
+                    const originalBill = bills.find(b => b.id == billId);
+                    if (originalBill && originalBill.paid !== paid) {
+                        await demo_markBillPaid(billId, paid);
+                    }
+                    
+                    renderBills();
+                    recalculateTarget();
+                    updateStats();
+                } else {
+                    await window.api.updateBill(billId, updates);
 
-                // Also update paid status if changed
-                const paid = document.getElementById('editBillPaid').checked;
-                const originalBill = bills.find(b => b.id == billId);
-                if (originalBill && originalBill.paid !== paid) {
-                    await window.api.markBillPaid(billId, paid);
+                    // Also update paid status if changed
+                    const paid = document.getElementById('editBillPaid').checked;
+                    const originalBill = bills.find(b => b.id == billId);
+                    if (originalBill && originalBill.paid !== paid) {
+                        await window.api.markBillPaid(billId, paid);
+                    }
+
+                    await loadDashboardData();
                 }
 
-                await loadDashboardData();
                 closeEditBillModal();
                 alert('✅ Bill updated successfully!');
             } catch (error) {
@@ -2889,8 +3064,15 @@
         // Toggle Bill Paid
         async function toggleBillPaid(id, paid) {
             try {
-                await window.api.markBillPaid(id, paid);
-                await loadBills();
+                if (isDemoMode) {
+                    await demo_markBillPaid(id, paid);
+                    renderBills();
+                    recalculateTarget();
+                    updateStats();
+                } else {
+                    await window.api.markBillPaid(id, paid);
+                    await loadBills();
+                }
             } catch (error) {
                 alert('Error updating bill: ' + error.message);
             }
@@ -2901,8 +3083,15 @@
             if (!confirm('Delete this bill?')) return;
 
             try {
-                await window.api.deleteBill(id);
-                await loadDashboardData();
+                if (isDemoMode) {
+                    await demo_deleteBill(id);
+                    renderBills();
+                    recalculateTarget();
+                    updateStats();
+                } else {
+                    await window.api.deleteBill(id);
+                    await loadDashboardData();
+                }
             } catch (error) {
                 alert('Error deleting bill: ' + error.message);
             }
