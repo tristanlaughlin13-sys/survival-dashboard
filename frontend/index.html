@@ -570,7 +570,59 @@
     </div>
 
     <script src="js/api.js"></script>
-    <script>
+    <script type="module">
+        // ===== IMPORTS =====
+        import { DEFAULT_HOURLY_RATE, DEFAULT_TAX_RATE, EXCHANGE_RATE } from './js/config.js';
+        import {
+            formatCurrency,
+            formatDate,
+            formatDateISO,
+            calculateHours,
+            calculateDaysLeft,
+            safeParseFloat,
+            generateId,
+            getBillUrgency,
+            isToday
+        } from './js/utils.js';
+        import {
+            isAuthenticated,
+            setAuthToken,
+            clearAuth,
+            logout as authLogout,
+            isDemoMode as checkDemoMode
+        } from './js/auth.js';
+        import {
+            generateRandomSessions,
+            generateRandomBills,
+            generateDemoSettings,
+            loadDemoData,
+            saveDemoData,
+            demo_createSession,
+            demo_updateSession,
+            demo_deleteSession,
+            demo_createBill,
+            demo_updateBill,
+            demo_markBillPaid,
+            demo_deleteBill,
+            demo_updateSettings
+        } from './js/demo.js';
+        import {
+            calculateDailyGoal,
+            calculateProgress,
+            calculateTotalWithTax,
+            calculateTaxReserve,
+            calculateAfterTax,
+            calculateTotalEarnings,
+            calculateTotalHours,
+            calculateBillsTotal,
+            getTodaySessions,
+            calculateHoursPerDay,
+            calculateTotalHoursNeeded,
+            processInitialBalance,
+            calculateTargetBills
+        } from './js/stats.js';
+        import { showModal, closeModal, setupModals } from './js/modals.js';
+
         // Global State
         let DEADLINE = new Date('2025-10-24T23:59:59');
         let TOTAL_NEEDED = 2945;
@@ -583,230 +635,22 @@
         let bills = [];
         let isDemoMode = false;
 
-        // ===== DEMO MODE: Fake Data Generators =====
-
-        function generateRandomSessions() {
-            const sessions = [];
-            const today = new Date();
-            const names = [
-                'Client Website',
-                'App Development',
-                'Consulting Call',
-                'Bug Fixes',
-                'Code Review',
-                'Feature Implementation',
-                'Database Migration',
-                'UI/UX Design',
-                'API Integration',
-                'Testing & QA'
-            ];
-            const rates = [45, 55, 65, 75, 85, 95];
-
-            // Generate 15-25 sessions over last 14 days
-            const sessionCount = Math.floor(Math.random() * 11) + 15;
-
-            for (let i = 0; i < sessionCount; i++) {
-                const daysAgo = Math.floor(Math.random() * 14);
-                const date = new Date(today.getTime() - daysAgo * 24 * 60 * 60 * 1000);
-                const hours = (Math.random() * 6 + 1).toFixed(2); // 1-7 hours
-                const rate = rates[Math.floor(Math.random() * rates.length)];
-                const earnings = (parseFloat(hours) * rate).toFixed(2);
-
-                // Random time of day
-                date.setHours(Math.floor(Math.random() * 12) + 8); // 8am-8pm
-                date.setMinutes(Math.floor(Math.random() * 60));
-
-                sessions.push({
-                    id: `demo-session-${i}`,
-                    time_display: date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
-                    timestamp: date.toISOString(),
-                    date: date.toISOString().split('T')[0],
-                    hours: parseFloat(hours),
-                    rate: parseFloat(rate),
-                    earnings: parseFloat(earnings),
-                    note: names[Math.floor(Math.random() * names.length)],
-                    is_leisure: false,
-                    opportunity_cost: 0,
-                    is_manual: true,
-                    created_at: date.toISOString(),
-                    updated_at: date.toISOString()
-                });
-            }
-
-            return sessions.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-        }
-
-        function generateRandomBills() {
-            const billTypes = [
-                { name: 'Rent', cadRange: [1200, 2500], usdFactor: 0.7143 },
-                { name: 'Groceries', cadRange: [150, 400], usdFactor: 0.7143 },
-                { name: 'Utilities', cadRange: [80, 200], usdFactor: 0.7143 },
-                { name: 'Internet', cadRange: [60, 120], usdFactor: 0.7143 },
-                { name: 'Phone Bill', cadRange: [30, 80], usdFactor: 0.7143 },
-                { name: 'Credit Card', cadRange: [100, 800], usdFactor: 0.7143 },
-                { name: 'Insurance', cadRange: [150, 400], usdFactor: 0.7143 },
-                { name: 'Gas/Fuel', cadRange: [50, 150], usdFactor: 0.7143 },
-                { name: 'Subscription Services', cadRange: [15, 80], usdFactor: 0.7143 },
-                { name: 'Student Loan', cadRange: [200, 600], usdFactor: 0.7143 }
-            ];
-
-            const bills = [];
-            const billCount = Math.floor(Math.random() * 6) + 7; // 7-12 bills
-            const usedTypes = new Set();
-
-            for (let i = 0; i < billCount; i++) {
-                // Pick a unique bill type
-                let billType;
-                do {
-                    billType = billTypes[Math.floor(Math.random() * billTypes.length)];
-                } while (usedTypes.has(billType.name) && usedTypes.size < billTypes.length);
-                usedTypes.add(billType.name);
-
-                const amountCAD = (Math.random() * (billType.cadRange[1] - billType.cadRange[0]) + billType.cadRange[0]).toFixed(2);
-                const amountUSD = (amountCAD * billType.usdFactor).toFixed(2);
-                const daysUntilDue = Math.floor(Math.random() * 30) - 5; // -5 to +25 days
-                const dueDate = new Date(Date.now() + daysUntilDue * 24 * 60 * 60 * 1000);
-                const paid = daysUntilDue < 0 ? (Math.random() > 0.3) : false; // 70% of past bills are paid
-
-                bills.push({
-                    id: `demo-bill-${i}`,
-                    name: billType.name,
-                    amount_cad: parseFloat(amountCAD),
-                    amount_usd: parseFloat(amountUSD),
-                    due_date: dueDate.toISOString().split('T')[0],
-                    paid: paid,
-                    paid_at: paid ? new Date(dueDate.getTime() - Math.random() * 3 * 24 * 60 * 60 * 1000).toISOString() : null,
-                    created_at: new Date().toISOString(),
-                    updated_at: new Date().toISOString()
-                });
-            }
-
-            return bills.sort((a, b) => new Date(a.due_date) - new Date(b.due_date));
-        }
-
-        function generateDemoSettings() {
-            const sprintEnd = new Date(Date.now() + 9 * 24 * 60 * 60 * 1000); // 9 days from now
-            const hourlyRates = [45, 55, 65, 75, 85];
-            const taxRates = [25, 30, 35];
-            const initialBalances = [200, 300, 400, 500, 600];
-
-            return {
-                sprint_end_date: sprintEnd.toISOString(),
-                target_bills_mode: 'auto_unpaid',
-                target_bills_manual: 0,
-                initial_balance: initialBalances[Math.floor(Math.random() * initialBalances.length)],
-                initial_balance_currency: Math.random() > 0.5 ? 'USD' : 'CAD',
-                default_hourly_rate: hourlyRates[Math.floor(Math.random() * hourlyRates.length)],
-                tax_reserve_rate: taxRates[Math.floor(Math.random() * taxRates.length)],
-                exchange_rate_cad_to_usd: 0.7143
-            };
-        }
-
-        function isDemoModeActive() {
-            return !localStorage.getItem('authToken');
-        }
-
-        // ===== DEMO MODE: SessionStorage CRUD Wrappers =====
-
-        function saveDemoData() {
-            if (isDemoMode) {
-                sessionStorage.setItem('demoSessions', JSON.stringify(sessions));
-                sessionStorage.setItem('demoBills', JSON.stringify(bills));
-                sessionStorage.setItem('demoSettings', JSON.stringify(userSettings));
-            }
-        }
-
-        async function demo_createSession(sessionData) {
-            sessionData.id = `demo-session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-            sessionData.created_at = new Date().toISOString();
-            sessionData.updated_at = new Date().toISOString();
-            sessions.unshift(sessionData);
-            saveDemoData();
-            return sessionData;
-        }
-
-        async function demo_updateSession(id, sessionData) {
-            const index = sessions.findIndex(s => s.id === id);
-            if (index !== -1) {
-                sessions[index] = { ...sessions[index], ...sessionData, updated_at: new Date().toISOString() };
-                saveDemoData();
-                return sessions[index];
-            }
-            throw new Error('Session not found');
-        }
-
-        async function demo_deleteSession(id) {
-            const index = sessions.findIndex(s => s.id === id);
-            if (index !== -1) {
-                sessions.splice(index, 1);
-                saveDemoData();
-            }
-        }
-
-        async function demo_createBill(billData) {
-            billData.id = `demo-bill-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-            billData.created_at = new Date().toISOString();
-            billData.updated_at = new Date().toISOString();
-            billData.paid = false;
-            billData.paid_at = null;
-            bills.push(billData);
-            saveDemoData();
-            return billData;
-        }
-
-        async function demo_updateBill(id, billData) {
-            const index = bills.findIndex(b => b.id === id);
-            if (index !== -1) {
-                bills[index] = { ...bills[index], ...billData, updated_at: new Date().toISOString() };
-                saveDemoData();
-                return bills[index];
-            }
-            throw new Error('Bill not found');
-        }
-
-        async function demo_markBillPaid(id, paid) {
-            const index = bills.findIndex(b => b.id === id);
-            if (index !== -1) {
-                bills[index].paid = paid;
-                bills[index].paid_at = paid ? new Date().toISOString() : null;
-                bills[index].updated_at = new Date().toISOString();
-                saveDemoData();
-                return bills[index];
-            }
-            throw new Error('Bill not found');
-        }
-
-        async function demo_deleteBill(id) {
-            const index = bills.findIndex(b => b.id === id);
-            if (index !== -1) {
-                bills.splice(index, 1);
-                saveDemoData();
-            }
-        }
-
-        async function demo_updateSettings(settingsData) {
-            userSettings = { ...userSettings, ...settingsData };
-            DEADLINE = new Date(userSettings.sprint_end_date);
-            saveDemoData();
-            return userSettings;
-        }
-
-        // ===== DEMO MODE: Load Demo Data =====
+        // ===== DEMO MODE: Load Demo Data ===== 
+        // ===== DEMO MODE FUNCTIONS =====
+        // (Generators and CRUD wrappers are now in demo.js module)
 
         function loadDemoMode() {
             console.log('🎭 Loading Demo Mode...');
             isDemoMode = true;
 
-            // Check if we have demo data in sessionStorage
-            const storedSessions = sessionStorage.getItem('demoSessions');
-            const storedBills = sessionStorage.getItem('demoBills');
-            const storedSettings = sessionStorage.getItem('demoSettings');
+            // Try to load existing demo data from sessionStorage
+            const stored = loadDemoData();
 
-            if (storedSessions && storedBills && storedSettings) {
+            if (stored) {
                 // Load existing demo data from this session
-                sessions = JSON.parse(storedSessions);
-                bills = JSON.parse(storedBills);
-                userSettings = JSON.parse(storedSettings);
+                sessions = stored.sessions;
+                bills = stored.bills;
+                userSettings = stored.settings;
                 console.log('📦 Loaded demo data from session storage');
             } else {
                 // Generate fresh demo data
@@ -815,9 +659,7 @@
                 userSettings = generateDemoSettings();
 
                 // Store in sessionStorage
-                sessionStorage.setItem('demoSessions', JSON.stringify(sessions));
-                sessionStorage.setItem('demoBills', JSON.stringify(bills));
-                sessionStorage.setItem('demoSettings', JSON.stringify(userSettings));
+                saveDemoData(sessions, bills, userSettings);
                 console.log('✨ Generated fresh demo data');
             }
 
@@ -1624,7 +1466,7 @@
 
             try {
                 if (isDemoMode) {
-                    await demo_createSession(sessionData);
+                    await demo_createSession(sessionData, sessions, bills, userSettings);
                     renderSessions();
                     updateStats();
                 } else {
@@ -1667,7 +1509,7 @@
 
             try {
                 if (isDemoMode) {
-                    await demo_updateSession(sessionId, sessionData);
+                    await demo_updateSession(sessionId, sessionData, sessions, bills, userSettings);
                     renderSessions();
                     updateStats();
                 } else {
@@ -1825,7 +1667,7 @@
 
             try {
                 if (isDemoMode) {
-                    await demo_createBill(billData);
+                    await demo_createBill(billData, sessions, bills, userSettings);
                     renderBills();
                     recalculateTarget();
                     updateStats();
@@ -1871,7 +1713,7 @@
 
             try {
                 if (isDemoMode) {
-                    await demo_deleteSession(id);
+                    await demo_deleteSession(id, sessions, bills, userSettings);
                     renderSessions();
                     updateStats();
                 } else {
@@ -1924,13 +1766,13 @@
 
             try {
                 if (isDemoMode) {
-                    await demo_updateBill(billId, updates);
+                    await demo_updateBill(billId, updates, sessions, bills, userSettings);
 
                     // Also update paid status if changed
                     const paid = document.getElementById('editBillPaid').checked;
                     const originalBill = bills.find(b => b.id == billId);
                     if (originalBill && originalBill.paid !== paid) {
-                        await demo_markBillPaid(billId, paid);
+                        await demo_markBillPaid(billId, paid, sessions, bills, userSettings);
                     }
 
                     renderBills();
@@ -1967,7 +1809,7 @@
         async function toggleBillPaid(id, paid) {
             try {
                 if (isDemoMode) {
-                    await demo_markBillPaid(id, paid);
+                    await demo_markBillPaid(id, paid, sessions, bills, userSettings);
                     renderBills();
                     recalculateTarget();
                     updateStats();
@@ -1986,7 +1828,7 @@
 
             try {
                 if (isDemoMode) {
-                    await demo_deleteBill(id);
+                    await demo_deleteBill(id, sessions, bills, userSettings);
                     renderBills();
                     recalculateTarget();
                     updateStats();
