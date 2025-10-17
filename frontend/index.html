@@ -1883,7 +1883,7 @@
             closeBurgerMenu();
         }
 
-        function handleImport(event) {
+        async function handleImport(event) {
             const file = event.target.files[0];
             if (!file) return;
 
@@ -1891,9 +1891,96 @@
             reader.onload = async function (e) {
                 try {
                     const data = JSON.parse(e.target.result);
-                    // Handle import logic here
-                    alert('Import functionality coming soon!');
+
+                    // Validate data format
+                    if (!data || typeof data !== 'object') {
+                        alert('❌ Invalid data format');
+                        return;
+                    }
+
+                    // Check if user wants to add to existing data
+                    const hasExistingData = sessions.length > 0 || bills.length > 0;
+                    if (hasExistingData) {
+                        const confirmOverwrite = confirm(
+                            `You have ${sessions.length} sessions and ${bills.length} bills in your account.\n\n` +
+                            'Import will ADD the data from the file to your existing data.\n\n' +
+                            'Continue with import?'
+                        );
+                        if (!confirmOverwrite) return;
+                    }
+
+                    let importedSessions = 0;
+                    let importedBills = 0;
+                    let skippedSessions = 0;
+                    let skippedBills = 0;
+
+                    // Import Sessions
+                    if (data.sessions && Array.isArray(data.sessions)) {
+                        for (const session of data.sessions) {
+                            try {
+                                // Map old format to new API format
+                                const sessionData = {
+                                    time_display: session.time || session.time_display || 'Imported',
+                                    timestamp: session.timestamp || new Date(session.date || Date.now()).toISOString(),
+                                    date: session.date ? new Date(session.date).toISOString().split('T')[0] : new Date(session.timestamp).toISOString().split('T')[0],
+                                    hours: parseFloat(session.hours || 0),
+                                    rate: parseFloat(session.rate || 0),
+                                    earnings: parseFloat(session.earnings || 0),
+                                    note: session.note || '',
+                                    is_leisure: session.isLeisure || session.is_leisure || false,
+                                    opportunity_cost: parseFloat(session.opportunityCost || session.opportunity_cost || 0),
+                                    is_manual: true
+                                };
+
+                                await window.api.createSession(sessionData);
+                                importedSessions++;
+                            } catch (error) {
+                                console.error('Error importing session:', error);
+                                skippedSessions++;
+                            }
+                        }
+                    }
+
+                    // Import Bills (if present in file)
+                    if (data.bills && Array.isArray(data.bills)) {
+                        for (const bill of data.bills) {
+                            try {
+                                // Map bill data
+                                const billData = {
+                                    name: bill.name || 'Imported Bill',
+                                    amount_cad: parseFloat(bill.amount || bill.amount_cad || 0),
+                                    amount_usd: parseFloat(bill.amountUSD || bill.amount_usd || (bill.amount / 1.4) || 0),
+                                    due_date: bill.dueDate || bill.due_date || null
+                                };
+
+                                await window.api.createBill(billData);
+                                importedBills++;
+                            } catch (error) {
+                                console.error('Error importing bill:', error);
+                                skippedBills++;
+                            }
+                        }
+                    }
+
+                    // Show results
+                    let message = '✅ Import Complete!\n\n';
+                    if (importedSessions > 0) message += `📝 Imported ${importedSessions} session(s)\n`;
+                    if (importedBills > 0) message += `💸 Imported ${importedBills} bill(s)\n`;
+                    if (skippedSessions > 0) message += `⚠️ Skipped ${skippedSessions} session(s) due to errors\n`;
+                    if (skippedBills > 0) message += `⚠️ Skipped ${skippedBills} bill(s) due to errors\n`;
+
+                    if (importedSessions === 0 && importedBills === 0) {
+                        message = '⚠️ No data was imported. The file may not contain sessions or bills.';
+                    }
+
+                    alert(message);
+
+                    // Reload dashboard to show imported data
+                    await loadDashboardData();
+                    closeBurgerMenu();
+
                 } catch (err) {
+                    console.error('Import error:', err);
                     alert('❌ Error importing data: ' + err.message);
                 }
             };
