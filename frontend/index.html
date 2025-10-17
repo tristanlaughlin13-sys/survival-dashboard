@@ -1500,15 +1500,29 @@
         }
 
         function recalculateTarget() {
-            if (!userSettings) return;
+            if (!userSettings) {
+                console.warn('Settings not loaded yet');
+                return;
+            }
+
+            if (!Array.isArray(bills)) {
+                console.warn('Bills not loaded yet');
+                TOTAL_NEEDED = 0;
+                return;
+            }
 
             // Calculate TOTAL_NEEDED based on settings (AFTER bills are loaded)
-            if (userSettings.target_bills_mode === 'manual') {
-                TOTAL_NEEDED = userSettings.target_bills_manual || 0;
-            } else if (userSettings.target_bills_mode === 'auto_all') {
-                TOTAL_NEEDED = bills.reduce((sum, bill) => sum + parseFloat(bill.amount_usd || 0), 0);
-            } else { // auto_unpaid (default)
-                TOTAL_NEEDED = bills.filter(b => !b.paid).reduce((sum, bill) => sum + parseFloat(bill.amount_usd || 0), 0);
+            try {
+                if (userSettings.target_bills_mode === 'manual') {
+                    TOTAL_NEEDED = userSettings.target_bills_manual || 0;
+                } else if (userSettings.target_bills_mode === 'auto_all') {
+                    TOTAL_NEEDED = bills.reduce((sum, bill) => sum + parseFloat(bill.amount_usd || 0), 0);
+                } else { // auto_unpaid (default)
+                    TOTAL_NEEDED = bills.filter(b => !b.paid).reduce((sum, bill) => sum + parseFloat(bill.amount_usd || 0), 0);
+                }
+            } catch (error) {
+                console.error('Error calculating target:', error);
+                TOTAL_NEEDED = 0;
             }
         }
 
@@ -1684,14 +1698,16 @@
 
             track.innerHTML = sortedBills.map(bill => {
                 const dueDate = bill.due_date ? new Date(bill.due_date) : null;
-                const daysUntil = dueDate ? Math.ceil((dueDate - now) / (1000 * 60 * 60 * 24)) : null;
+                // Check if date is valid
+                const isValidDate = dueDate && !isNaN(dueDate.getTime());
+                const daysUntil = isValidDate ? Math.ceil((dueDate - now) / (1000 * 60 * 60 * 24)) : null;
                 let urgencyClass = '';
                 let dueText = '';
 
                 if (bill.paid) {
                     urgencyClass = 'paid';
                     dueText = '✅ PAID';
-                } else if (!dueDate) {
+                } else if (!isValidDate) {
                     urgencyClass = '';
                     dueText = 'No due date';
                 } else if (daysUntil < 0) {
@@ -1729,10 +1745,12 @@
                 `;
             }).join('');
 
-            const totalUnpaidCAD = sortedBills.filter(b => !b.paid).reduce((sum, b) => sum + parseFloat(b.amount_cad), 0);
-            const totalUnpaidUSD = sortedBills.filter(b => !b.paid).reduce((sum, b) => sum + parseFloat(b.amount_usd), 0);
+            const totalUnpaidCAD = sortedBills.filter(b => !b.paid).reduce((sum, b) => sum + parseFloat(b.amount_cad || 0), 0);
+            const totalUnpaidUSD = sortedBills.filter(b => !b.paid).reduce((sum, b) => sum + parseFloat(b.amount_usd || 0), 0);
             const billsTotalEl = document.getElementById('billsTotal');
-            if (billsTotalEl) billsTotalEl.textContent = `$${totalUnpaidCAD.toFixed(2)} CAD (~$${totalUnpaidUSD.toFixed(2)} USD)`;
+            if (billsTotalEl) {
+                billsTotalEl.innerHTML = `$${totalUnpaidCAD.toFixed(2)} <span style="font-size: 0.6em; color: #999; display: block; margin-top: 5px;">(~$${totalUnpaidUSD.toFixed(2)} USD)</span>`;
+            }
         }
 
         // Update Session History
@@ -1841,6 +1859,12 @@
         }
 
         function updateStats() {
+            // Guard clause - ensure data is loaded
+            if (!Array.isArray(sessions) || !Array.isArray(bills)) {
+                console.warn('Data not loaded yet, skipping stats update');
+                return;
+            }
+
             if (sessions.length === 0 && bills.length === 0) return;
 
             const today = new Date().toDateString();
