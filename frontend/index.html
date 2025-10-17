@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -258,7 +259,7 @@
             transform: translate(-50%, -50%);
             font-weight: bold;
             color: #fff;
-            text-shadow: 0 0 5px rgba(0,0,0,0.8);
+            text-shadow: 0 0 5px rgba(0, 0, 0, 0.8);
             font-size: 0.9em;
         }
 
@@ -570,7 +571,7 @@
             top: 0;
             height: 100%;
             width: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,51,51,0.1), transparent);
+            background: linear-gradient(90deg, transparent, rgba(255, 51, 51, 0.1), transparent);
             animation: shimmer 3s infinite;
         }
 
@@ -596,6 +597,7 @@
                 transform: translateX(-20px);
                 opacity: 0;
             }
+
             to {
                 transform: translateX(0);
                 opacity: 1;
@@ -603,18 +605,32 @@
         }
 
         @keyframes pulse {
-            0%, 100% {
+
+            0%,
+            100% {
                 box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.7);
             }
+
             50% {
                 box-shadow: 0 0 20px 5px rgba(255, 0, 0, 0);
             }
         }
 
         @keyframes shimmer {
-            0% { width: 0; left: 0; }
-            50% { width: 100%; left: 0; }
-            100% { width: 0; left: 100%; }
+            0% {
+                width: 0;
+                left: 0;
+            }
+
+            50% {
+                width: 100%;
+                left: 0;
+            }
+
+            100% {
+                width: 0;
+                left: 100%;
+            }
         }
 
         .bill-info {
@@ -719,6 +735,7 @@
                 transform: translateY(-50px);
                 opacity: 0;
             }
+
             to {
                 transform: translateY(0);
                 opacity: 1;
@@ -828,8 +845,13 @@
         }
 
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
         }
 
         /* Responsive */
@@ -837,15 +859,15 @@
             .hero-grid {
                 grid-template-columns: 1fr;
             }
-            
+
             .stats-row {
                 grid-template-columns: 1fr;
             }
-            
+
             .main-content {
                 grid-template-columns: 1fr;
             }
-            
+
             .stats-grid.four-col {
                 grid-template-columns: repeat(2, 1fr);
             }
@@ -855,15 +877,15 @@
             .countdown-timer {
                 font-size: 2.5em;
             }
-            
+
             .big-number {
                 font-size: 2em;
             }
-            
+
             .header h1 {
                 font-size: 1.8em;
             }
-            
+
             .form-row {
                 grid-template-columns: 1fr;
             }
@@ -909,6 +931,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <!-- Header with Burger Menu -->
@@ -1077,7 +1100,8 @@
             <!-- Bills Conveyor -->
             <div class="card critical">
                 <div class="card-title">💸 BILLS CONVEYOR</div>
-                <button class="btn-small primary" style="width: 100%; margin-bottom: 15px;" onclick="showAddBillModal()">➕ Add Bill</button>
+                <button class="btn-small primary" style="width: 100%; margin-bottom: 15px;"
+                    onclick="showAddBillModal()">➕ Add Bill</button>
                 <div class="bills-track" id="billsTrack">
                     <div class="loading">
                         <div class="spinner"></div>
@@ -1145,7 +1169,8 @@
                 <div class="form-row">
                     <div class="input-group">
                         <label>Amount CAD</label>
-                        <input type="number" id="billAmountCAD" step="0.01" min="0" placeholder="0.00" required onchange="autoCalculateUSD()">
+                        <input type="number" id="billAmountCAD" step="0.01" min="0" placeholder="0.00" required
+                            onchange="autoCalculateUSD()">
                     </div>
                     <div class="input-group">
                         <label>Amount USD</label>
@@ -1199,7 +1224,7 @@
         function initializeTimers() {
             setInterval(updateCountdown, 1000);
             updateCountdown();
-            
+
             const today = new Date();
             const manualDateEl = document.getElementById('manualDate');
             const viewDateEl = document.getElementById('viewDate');
@@ -1221,19 +1246,19 @@
             const now = new Date();
             const diff = DEADLINE - now;
             const countdownEl = document.getElementById('countdown');
-            
+
             if (!countdownEl) return;
-            
+
             if (diff <= 0) {
                 countdownEl.textContent = 'DEADLINE PASSED';
                 return;
             }
-            
+
             const days = Math.floor(diff / (1000 * 60 * 60 * 24));
             const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
             const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
             const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-            
+
             countdownEl.textContent = `${days}d ${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
         }
 
@@ -1243,7 +1268,7 @@
                 isTimerRunning = true;
                 document.getElementById('startBtn').style.display = 'none';
                 document.getElementById('stopBtn').style.display = 'block';
-                
+
                 timerInterval = setInterval(() => {
                     timerSeconds++;
                     updateTimerDisplay();
@@ -1291,20 +1316,20 @@
 
         async function logSession() {
             if (timerSeconds === 0) return;
-            
+
             const rateEl = document.getElementById('hourlyRate');
             if (!rateEl) return;
-            
+
             const rate = parseFloat(rateEl.value);
             const hours = timerSeconds / 3600;
             const earnings = hours * rate;
             const isLeisure = rate === 0;
             const opportunityCost = isLeisure ? hours * 24 : 0;
             const note = prompt('Add a note for this session (optional):') || '';
-            
+
             const startTime = new Date(Date.now() - timerSeconds * 1000);
             const endTime = new Date();
-            
+
             const sessionData = {
                 time_display: `${startTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })} - ${endTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}`,
                 timestamp: startTime.toISOString(),
@@ -1321,7 +1346,7 @@
             try {
                 await window.api.createSession(sessionData);
                 await loadDashboardData();
-                
+
                 timerSeconds = 0;
                 updateTimerDisplay();
                 updateCurrentSessionEarnings();
@@ -1367,7 +1392,7 @@
             const now = new Date();
             const track = document.getElementById('billsTrack');
             if (!track) return;
-            
+
             if (bills.length === 0) {
                 track.innerHTML = `
                     <div class="empty-state">
@@ -1377,7 +1402,7 @@
                 `;
                 return;
             }
-            
+
             const sortedBills = [...bills].sort((a, b) => {
                 if (a.paid && !b.paid) return 1;
                 if (!a.paid && b.paid) return -1;
@@ -1385,13 +1410,13 @@
                 if (!b.due_date) return -1;
                 return new Date(a.due_date) - new Date(b.due_date);
             });
-            
+
             track.innerHTML = sortedBills.map(bill => {
                 const dueDate = bill.due_date ? new Date(bill.due_date) : null;
                 const daysUntil = dueDate ? Math.ceil((dueDate - now) / (1000 * 60 * 60 * 24)) : null;
                 let urgencyClass = '';
                 let dueText = '';
-                
+
                 if (bill.paid) {
                     urgencyClass = 'paid';
                     dueText = '✅ PAID';
@@ -1413,7 +1438,7 @@
                 } else {
                     dueText = `Due ${dueDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
                 }
-                
+
                 return `
                     <div class="bill-item ${urgencyClass}">
                         <div class="bill-info">
@@ -1431,7 +1456,7 @@
                     </div>
                 `;
             }).join('');
-            
+
             const totalUnpaidCAD = sortedBills.filter(b => !b.paid).reduce((sum, b) => sum + parseFloat(b.amount_cad), 0);
             const billsTotalEl = document.getElementById('billsTotal');
             if (billsTotalEl) billsTotalEl.textContent = `$${totalUnpaidCAD.toFixed(2)}`;
@@ -1441,25 +1466,25 @@
         function updateSessionHistory() {
             const container = document.getElementById('sessionHistory');
             if (!container) return;
-            
+
             const viewDateInput = document.getElementById('viewDate');
             const viewDateValue = viewDateInput ? viewDateInput.value : null;
-            
+
             let filteredSessions = sessions;
             let viewingAll = false;
-            
+
             if (viewDateValue) {
                 const viewDate = new Date(viewDateValue).toDateString();
                 filteredSessions = sessions.filter(s => new Date(s.timestamp).toDateString() === viewDate);
             } else {
                 viewingAll = true;
             }
-            
+
             if (filteredSessions.length === 0) {
                 container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">📭</div><p>${viewingAll ? 'No sessions logged yet' : 'No sessions on this date'}</p></div>`;
                 return;
             }
-            
+
             if (viewingAll) {
                 const sessionsByDate = {};
                 filteredSessions.forEach(s => {
@@ -1467,14 +1492,14 @@
                     if (!sessionsByDate[date]) sessionsByDate[date] = [];
                     sessionsByDate[date].push(s);
                 });
-                
+
                 container.innerHTML = Object.keys(sessionsByDate)
                     .sort((a, b) => new Date(b) - new Date(a))
                     .map(date => {
                         const dateSessions = sessionsByDate[date];
                         const totalHours = dateSessions.reduce((sum, s) => sum + parseFloat(s.hours), 0);
                         const totalEarnings = dateSessions.filter(s => !s.is_leisure).reduce((sum, s) => sum + parseFloat(s.earnings), 0);
-                        
+
                         return `
                             <div class="date-group-header">
                                 <span>${new Date(date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}</span>
@@ -1487,14 +1512,14 @@
                 container.innerHTML = renderSessionItems(filteredSessions);
             }
         }
-        
+
         function renderSessionItems(sessionList) {
             return sessionList.map((s) => {
                 const isLeisure = s.rate === 0 || s.is_leisure;
-                const displayEarnings = isLeisure ? 
+                const displayEarnings = isLeisure ?
                     `-$${(s.opportunity_cost || (parseFloat(s.hours) * 24)).toFixed(2)}` :
                     `$${parseFloat(s.earnings).toFixed(2)}`;
-                
+
                 return `
                     <div class="session-item ${isLeisure ? 'leisure' : ''}">
                         <div class="session-info">
@@ -1521,7 +1546,7 @@
             if (viewDateEl) viewDateEl.valueAsDate = new Date();
             updateSessionHistory();
         }
-        
+
         function viewAllDays() {
             const viewDateEl = document.getElementById('viewDate');
             if (viewDateEl) viewDateEl.value = '';
@@ -1533,9 +1558,9 @@
             try {
                 const stats = await window.api.getStats();
                 const todayStats = await window.api.getTodayStats();
-                
+
                 TOTAL_NEEDED = stats.totalTarget;
-                
+
                 updateStatsDisplay(stats, todayStats);
             } catch (error) {
                 console.error('Error loading stats:', error);
@@ -1544,31 +1569,31 @@
 
         function updateStats() {
             if (sessions.length === 0 && bills.length === 0) return;
-            
+
             const today = new Date().toDateString();
             const todaySessions = sessions.filter(s => new Date(s.timestamp).toDateString() === today);
-            
+
             const todayHours = todaySessions.reduce((sum, s) => sum + parseFloat(s.hours), 0);
             const todayEarnings = todaySessions.filter(s => !s.is_leisure).reduce((sum, s) => sum + parseFloat(s.earnings), 0);
-            
+
             const totalEarned = sessions.filter(s => !s.is_leisure).reduce((sum, s) => sum + parseFloat(s.earnings), 0);
-            
+
             const totalBillsUSD = bills.filter(b => !b.paid).reduce((sum, b) => sum + parseFloat(b.amount_usd), 0);
             const totalBillsCAD = bills.filter(b => !b.paid).reduce((sum, b) => sum + parseFloat(b.amount_cad), 0);
             const totalWithTax = totalBillsUSD / 0.67;
-            
+
             const remaining = totalWithTax - totalEarned;
             const daysLeft = Math.max(1, Math.ceil((DEADLINE - new Date()) / (1000 * 60 * 60 * 24)));
             const dailyGoal = remaining / daysLeft;
-            
+
             const rateEl = document.getElementById('hourlyRate');
             const rate = rateEl ? parseFloat(rateEl.value) : 24;
             const hoursPerDay = rate > 0 ? dailyGoal / rate : 0;
             const totalHours = rate > 0 ? remaining / rate : 0;
-            
+
             const progress = (totalEarned / totalWithTax) * 100;
             const todayProgress = (todayEarnings / dailyGoal) * 100;
-            
+
             const els = {
                 dailyGoal: document.getElementById('dailyGoal'),
                 todayProgress: document.getElementById('todayProgress'),
@@ -1589,14 +1614,14 @@
                 billsWithTax: document.getElementById('billsWithTax'),
                 billsCovered: document.getElementById('billsCovered')
             };
-            
+
             if (els.dailyGoal) els.dailyGoal.textContent = `$${Math.round(dailyGoal)}`;
             if (els.todayProgress) {
                 els.todayProgress.style.width = Math.min(todayProgress, 100) + '%';
                 els.todayProgress.classList.toggle('behind', todayProgress < 100);
             }
             if (els.todayProgressText) els.todayProgressText.textContent = `$${Math.round(todayEarnings)} / $${Math.round(dailyGoal)}`;
-            
+
             if (els.todayStatus) {
                 if (todayEarnings >= dailyGoal) {
                     els.todayStatus.textContent = `✅ GOAL MET! +$${(todayEarnings - dailyGoal).toFixed(2)} extra`;
@@ -1607,7 +1632,7 @@
                     els.todayStatus.className = 'status-message status-behind';
                 }
             }
-            
+
             if (els.totalEarned) els.totalEarned.textContent = `$${Math.round(totalEarned)}`;
             if (els.totalNeeded) els.totalNeeded.textContent = Math.round(totalWithTax);
             if (els.sprintProgress) els.sprintProgress.style.width = Math.min(progress, 100) + '%';
@@ -1618,7 +1643,7 @@
             if (els.todayEarnings) els.todayEarnings.textContent = `$${Math.round(todayEarnings)}`;
             if (els.hoursNeeded) els.hoursNeeded.textContent = hoursPerDay.toFixed(1);
             if (els.totalHoursNeeded) els.totalHoursNeeded.textContent = Math.round(totalHours);
-            
+
             if (els.billsTotalCAD) els.billsTotalCAD.textContent = `$${Math.round(totalBillsCAD)}`;
             if (els.billsTotalUSD) els.billsTotalUSD.textContent = `$${Math.round(totalBillsUSD)}`;
             if (els.billsWithTax) els.billsWithTax.textContent = `$${Math.round(totalWithTax)}`;
@@ -1663,39 +1688,39 @@
         // Add Manual Session
         async function addManualSession(event) {
             event.preventDefault();
-            
+
             const dateInput = document.getElementById('manualDate').value;
             const startTime = document.getElementById('manualStartTime').value;
             const endTime = document.getElementById('manualEndTime').value;
             const rate = parseFloat(document.getElementById('manualRate').value);
             const note = document.getElementById('manualNote').value;
-            
+
             if (!dateInput || !startTime || !endTime) {
                 alert('Please fill in Date, Start Time, and End Time');
                 return;
             }
-            
+
             const entryDate = new Date(dateInput);
             const [startHour, startMinute] = startTime.split(':').map(Number);
             const [endHour, endMinute] = endTime.split(':').map(Number);
-            
+
             let startTotalMinutes = startHour * 60 + startMinute;
             let endTotalMinutes = endHour * 60 + endMinute;
             if (endTotalMinutes <= startTotalMinutes) endTotalMinutes += 24 * 60;
-            
+
             const hours = (endTotalMinutes - startTotalMinutes) / 60;
-            
+
             const startTimeFormatted = new Date(entryDate);
             startTimeFormatted.setHours(startHour, startMinute);
             const endTimeFormatted = new Date(entryDate);
             endTimeFormatted.setHours(endHour, endMinute);
-            
+
             const timeDisplay = `${startTimeFormatted.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })} - ${endTimeFormatted.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}`;
-            
+
             const isLeisure = rate === 0;
             const earnings = isLeisure ? 0 : hours * rate;
             const opportunityCost = isLeisure ? hours * 24 : 0;
-            
+
             const sessionData = {
                 time_display: timeDisplay,
                 timestamp: entryDate.toISOString(),
@@ -1713,7 +1738,7 @@
                 await window.api.createSession(sessionData);
                 await loadDashboardData();
                 closeAddSessionModal();
-                
+
                 // Reset form
                 document.getElementById('manualStartTime').value = '';
                 document.getElementById('manualEndTime').value = '';
@@ -1743,7 +1768,7 @@
                 await window.api.createBill(billData);
                 await loadDashboardData();
                 closeAddBillModal();
-                
+
                 // Reset form
                 document.getElementById('billName').value = '';
                 document.getElementById('billAmountCAD').value = '';
@@ -1757,7 +1782,7 @@
         function autoCalculateUSD() {
             const cadInput = document.getElementById('billAmountCAD');
             const usdInput = document.getElementById('billAmountUSD');
-            
+
             if (cadInput && usdInput && cadInput.value) {
                 const cad = parseFloat(cadInput.value);
                 const usd = (cad / 1.4).toFixed(2);
@@ -1769,22 +1794,22 @@
         async function editSession(id) {
             const session = sessions.find(s => s.id === id);
             if (!session) return;
-            
+
             const newRate = prompt(`Edit hourly rate (was $${session.rate}/hr):`, session.rate);
             if (newRate === null) return;
-            
+
             const rate = parseFloat(newRate);
             if (isNaN(rate) || rate < 0) {
                 alert('Please enter a valid rate (0 or higher)');
                 return;
             }
-            
+
             const newNote = prompt(`Edit note (optional):`, session.note || '');
             const hours = parseFloat(session.hours);
             const isLeisure = rate === 0;
             const newEarnings = isLeisure ? 0 : hours * rate;
             const opportunityCost = isLeisure ? hours * 24 : 0;
-            
+
             try {
                 await window.api.updateSession(id, {
                     rate: rate,
@@ -1802,7 +1827,7 @@
         // Delete Session
         async function deleteSession(id) {
             if (!confirm('Delete this session?')) return;
-            
+
             try {
                 await window.api.deleteSession(id);
                 await loadDashboardData();
@@ -1824,7 +1849,7 @@
         // Delete Bill
         async function deleteBill(id) {
             if (!confirm('Delete this bill?')) return;
-            
+
             try {
                 await window.api.deleteBill(id);
                 await loadDashboardData();
@@ -1861,9 +1886,9 @@
         function handleImport(event) {
             const file = event.target.files[0];
             if (!file) return;
-            
+
             const reader = new FileReader();
-            reader.onload = async function(e) {
+            reader.onload = async function (e) {
                 try {
                     const data = JSON.parse(e.target.result);
                     // Handle import logic here
@@ -1903,4 +1928,5 @@
         });
     </script>
 </body>
+
 </html>

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -37,6 +38,7 @@
                 opacity: 0;
                 transform: translateY(-20px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -93,8 +95,13 @@
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
         }
 
         .form-group {
@@ -171,9 +178,19 @@
         }
 
         @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-10px); }
-            75% { transform: translateX(10px); }
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            25% {
+                transform: translateX(-10px);
+            }
+
+            75% {
+                transform: translateX(10px);
+            }
         }
 
         .success-message {
@@ -203,7 +220,9 @@
         }
 
         @keyframes spin {
-            to { transform: rotate(360deg); }
+            to {
+                transform: rotate(360deg);
+            }
         }
 
         .password-requirements {
@@ -218,23 +237,24 @@
         }
 
         .info-box {
-            background: #2a2a2a;
-            border-left: 4px solid #00ff88;
+            background: #f0f4ff;
+            border-left: 4px solid #667eea;
             padding: 15px;
             border-radius: 8px;
             margin-top: 20px;
             font-size: 13px;
-            color: #999;
+            color: #555;
         }
 
         .info-box strong {
-            color: #00ff88;
+            color: #667eea;
         }
     </style>
 </head>
+
 <body>
     <div class="auth-container">
-        <h1>🔥 SURVIVAL MODE 🔥</h1>
+        <h1>🎯 Survival Dashboard</h1>
         <p class="subtitle">Secure time tracking & financial goals</p>
 
         <div class="tabs">
@@ -250,23 +270,12 @@
             <form onsubmit="handleLogin(event)">
                 <div class="form-group">
                     <label for="loginEmail">Email</label>
-                    <input 
-                        type="email" 
-                        id="loginEmail" 
-                        required 
-                        placeholder="your@email.com"
-                        autocomplete="email"
-                    >
+                    <input type="email" id="loginEmail" required placeholder="your@email.com" autocomplete="email">
                 </div>
                 <div class="form-group">
                     <label for="loginPassword">Password</label>
-                    <input 
-                        type="password" 
-                        id="loginPassword" 
-                        required 
-                        placeholder="••••••••"
-                        autocomplete="current-password"
-                    >
+                    <input type="password" id="loginPassword" required placeholder="••••••••"
+                        autocomplete="current-password">
                 </div>
                 <button type="submit" id="loginBtn">
                     Login
@@ -279,34 +288,16 @@
             <form onsubmit="handleRegister(event)">
                 <div class="form-group">
                     <label for="registerName">Full Name</label>
-                    <input 
-                        type="text" 
-                        id="registerName" 
-                        required 
-                        placeholder="John Doe"
-                        autocomplete="name"
-                    >
+                    <input type="text" id="registerName" required placeholder="John Doe" autocomplete="name">
                 </div>
                 <div class="form-group">
                     <label for="registerEmail">Email</label>
-                    <input 
-                        type="email" 
-                        id="registerEmail" 
-                        required 
-                        placeholder="your@email.com"
-                        autocomplete="email"
-                    >
+                    <input type="email" id="registerEmail" required placeholder="your@email.com" autocomplete="email">
                 </div>
                 <div class="form-group">
                     <label for="registerPassword">Password</label>
-                    <input 
-                        type="password" 
-                        id="registerPassword" 
-                        required 
-                        placeholder="••••••••"
-                        autocomplete="new-password"
-                        minlength="8"
-                    >
+                    <input type="password" id="registerPassword" required placeholder="••••••••"
+                        autocomplete="new-password" minlength="8">
                     <ul class="password-requirements">
                         <li>• At least 8 characters long</li>
                         <li>• Use a strong, unique password</li>
@@ -330,15 +321,15 @@
         document.querySelectorAll('.tab').forEach(tab => {
             tab.addEventListener('click', () => {
                 const targetTab = tab.dataset.tab;
-                
+
                 // Update active tab
                 document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
                 tab.classList.add('active');
-                
+
                 // Update active form
                 document.querySelectorAll('.form-container').forEach(f => f.classList.remove('active'));
                 document.getElementById(targetTab + 'Form').classList.add('active');
-                
+
                 // Clear messages
                 hideMessages();
             });
@@ -348,7 +339,7 @@
             const errorDiv = document.getElementById('errorMessage');
             errorDiv.textContent = message;
             errorDiv.classList.add('show');
-            
+
             setTimeout(() => {
                 errorDiv.classList.remove('show');
             }, 5000);
@@ -358,7 +349,7 @@
             const successDiv = document.getElementById('successMessage');
             successDiv.textContent = message;
             successDiv.classList.add('show');
-            
+
             setTimeout(() => {
                 successDiv.classList.remove('show');
             }, 3000);
@@ -383,7 +374,7 @@
             try {
                 const response = await window.api.login(email, password);
                 showSuccess('Login successful! Redirecting...');
-                
+
                 setTimeout(() => {
                     window.location.href = '/index.html';
                 }, 1000);
@@ -414,7 +405,7 @@
             try {
                 const response = await window.api.register(name, email, password);
                 showSuccess('Account created successfully! Redirecting...');
-                
+
                 setTimeout(() => {
                     window.location.href = '/index.html';
                 }, 1000);
@@ -442,5 +433,5 @@
         });
     </script>
 </body>
-</html>
 
+</html>
