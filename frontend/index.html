@@ -1236,7 +1236,7 @@
                 const afterTaxMultiplier = 1 / (1 - (taxReserveRate / 100));
                 const totalWithTax = totalBillsUSD * afterTaxMultiplier;
 
-                const remaining = Math.max(0, totalWithTax - totalEarned);
+                const remaining = Math.max(0, totalBillsUSD - totalEarned);
                 const daysLeft = Math.max(1, Math.ceil((DEADLINE - new Date()) / (1000 * 60 * 60 * 24)));
                 const dailyGoal = remaining / daysLeft;
 
@@ -1248,8 +1248,8 @@
 
                 // Fix progress bar edge cases
                 let progress = 0;
-                if (totalWithTax > 0) {
-                    progress = Math.min((totalEarned / totalWithTax) * 100, 100);
+                if (totalBillsUSD > 0) {
+                    progress = Math.min((totalEarned / totalBillsUSD) * 100, 100);
                 } else if (totalEarned > 0) {
                     progress = 100; // If no target but has earnings, show as complete
                 }
@@ -1312,7 +1312,7 @@
                 }
 
                 if (els.totalEarned) els.totalEarned.textContent = `$${Math.round(totalEarned)}`;
-                if (els.totalNeeded) els.totalNeeded.textContent = Math.round(totalWithTax);
+                if (els.totalNeeded) els.totalNeeded.textContent = Math.round(totalBillsUSD);
 
                 if (els.sprintProgress) {
                     els.sprintProgress.style.width = Math.min(progress, 100) + '%';
@@ -1336,7 +1336,7 @@
 
                 if (els.remaining) {
                     if (remaining <= 0 && totalEarned > 0) {
-                        els.remaining.textContent = `+$${Math.round(totalEarned - totalWithTax)}`;
+                        els.remaining.textContent = `+$${Math.round(totalEarned - totalBillsUSD)}`;
                         els.remaining.style.color = '#00ff88';
                     } else {
                         els.remaining.textContent = `$${Math.round(remaining)}`;
