@@ -1634,7 +1634,9 @@
 
             if (cadInput && usdInput && cadInput.value) {
                 const cad = parseFloat(cadInput.value);
-                const usd = (cad / 1.4).toFixed(2);
+                // Use exchange rate from settings, fallback to 0.7143 (CAD to USD)
+                const exchangeRate = userSettings?.exchange_rate_cad_to_usd || 0.7143;
+                const usd = (cad * exchangeRate).toFixed(2);
                 usdInput.value = usd;
             }
         }
@@ -1869,10 +1871,12 @@
                         for (const bill of data.bills) {
                             try {
                                 // Map bill data
+                                const amountCAD = parseFloat(bill.amount || bill.amount_cad || 0);
+                                const exchangeRate = userSettings?.exchange_rate_cad_to_usd || 0.7143;
                                 const billData = {
                                     name: bill.name || 'Imported Bill',
-                                    amount_cad: parseFloat(bill.amount || bill.amount_cad || 0),
-                                    amount_usd: parseFloat(bill.amountUSD || bill.amount_usd || (bill.amount / 1.4) || 0),
+                                    amount_cad: amountCAD,
+                                    amount_usd: parseFloat(bill.amountUSD || bill.amount_usd || (amountCAD * exchangeRate) || 0),
                                     due_date: bill.dueDate || bill.due_date || null
                                 };
 
