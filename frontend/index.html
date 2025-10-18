@@ -1534,9 +1534,15 @@
             try {
                 const settings = await window.api.getSettings();
 
-                // Convert sprint_end_date to datetime-local format
+                // Convert sprint_end_date to datetime-local format (preserve local time)
                 const sprintEnd = new Date(settings.sprint_end_date);
-                const dateStr = sprintEnd.toISOString().slice(0, 16);
+                // Format as YYYY-MM-DDTHH:MM in local timezone
+                const year = sprintEnd.getFullYear();
+                const month = String(sprintEnd.getMonth() + 1).padStart(2, '0');
+                const day = String(sprintEnd.getDate()).padStart(2, '0');
+                const hours = String(sprintEnd.getHours()).padStart(2, '0');
+                const minutes = String(sprintEnd.getMinutes()).padStart(2, '0');
+                const dateStr = `${year}-${month}-${day}T${hours}:${minutes}`;
                 document.getElementById('sprintEndDate').value = dateStr;
 
                 document.getElementById('targetBillsMode').value = settings.target_bills_mode || 'auto_unpaid';
