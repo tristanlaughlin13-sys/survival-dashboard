@@ -652,9 +652,9 @@ app.get('/api/stats', authenticateToken, apiLimiter, async (req, res) => {
       [req.user.id]
     );
 
-    // Get total bills
+    // Get total bills (unpaid only)
     const billsResult = await pool.query(
-      'SELECT COALESCE(SUM(amount_usd), 0) as total FROM bills WHERE user_id = $1',
+      'SELECT COALESCE(SUM(amount_usd), 0) as total FROM bills WHERE user_id = $1 AND paid = false',
       [req.user.id]
     );
 
