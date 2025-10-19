@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(gh issue create --title \"Demo Mode: Rotating Demo Profiles\" --label \"enhancement,low-priority,demo\" --body \"$(cat <<''EOF''\n## Summary\nInstead of random data, rotate through pre-made \"demo profiles\" to show different use cases.\n\n## Priority\nLOW\n\n## Example Profiles\n\n### \"The Freelancer\"\n- Hustling toward rent + living expenses\n- 5 days into 9-day sprint\n- 60% complete, on track\n\n### \"The Student\"\n- Paying for tuition + books\n- 2 days into sprint\n- Behind schedule, needs 8hrs/day\n\n### \"The Consultant\"\n- High hourly rate, multiple clients\n- Sprint nearly complete\n- Crushing goals\n\n## Benefits\n- More realistic demo data\n- Shows different use cases\n- Consistent for screenshots/demos\n- Can highlight specific features per profile\n\n## Implementation\n- Create `demo-profiles.json` with pre-made data\n- Rotate based on: time of day, random, or user selection\n- Each profile has: name, sessions, bills, settings, story\n\n---\n**From:** [FEATURE_BACKLOG.md](docs/planning/FEATURE_BACKLOG.md)\nEOF\n)\")",
+      "Bash(gh issue create --title \"Data Visualization: Sprint Progress Timeline\" --label \"enhancement,medium-priority,visualization\" --body \"$(cat <<''EOF''\n## Summary\nVisual timeline showing daily earnings over sprint.\n\n## Priority\nMEDIUM\n\n## Features\n- Line graph of earnings per day\n- Goal line overlay\n- Trend projection\n- Peak days highlighted\n\n---\n**From:** [FEATURE_BACKLOG.md](docs/planning/FEATURE_BACKLOG.md)\nEOF\n)\")"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
