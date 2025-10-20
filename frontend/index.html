@@ -1534,6 +1534,7 @@
             // Load current settings
             try {
                 const settings = await window.api.getSettings();
+                console.log('📋 Loading settings into modal:', settings);
 
                 // Convert sprint_end_date to datetime-local format (preserve local time)
                 const sprintEnd = new Date(settings.sprint_end_date);
@@ -1585,8 +1586,11 @@
                 exchange_rate_cad_to_usd: parseFloat(document.getElementById('exchangeRate').value)
             };
 
+            console.log('💾 Saving settings:', settings);
+
             try {
-                await window.api.updateSettings(settings);
+                const result = await window.api.updateSettings(settings);
+                console.log('✅ Settings saved, server response:', result);
                 await loadDashboardData();
                 updateStats(); // Force immediate stats refresh
                 closeSprintSettingsModal();
